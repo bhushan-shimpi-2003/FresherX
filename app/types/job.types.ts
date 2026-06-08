@@ -23,6 +23,8 @@ export interface Job {
   applyLink: string;
   deadline: string | null;
   status: JobStatus;
+  referralAvailable: boolean;
+  referralSlots: number;
   views: number;
   applications: number;
   matchScore?: number; // 0-100, computed for student
@@ -51,6 +53,7 @@ export interface JobFilters {
   salaryMin?: number;
   skills?: string[];
   companyId?: string;
+  referralAvailable?: boolean;
 }
 
 export interface SavedJob {
@@ -79,4 +82,6 @@ export interface CreateJobPayload {
   isRemote: boolean;
   applyLink: string;
   deadline?: string;
+  referralAvailable?: boolean;
+  referralSlots?: number;
 }

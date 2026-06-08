@@ -22,9 +22,9 @@ interface AdminStore {
   fetchPendingJobs: () => Promise<void>;
   reviewJob: (payload: ReviewJobPayload) => Promise<{ success: boolean; error?: string }>;
   fetchUsers: () => Promise<void>;
-  suspendUser: (userId: string) => Promise<{ success: boolean; error?: string }>;
+  updateUserStatus: (userId: string, action: 'suspend' | 'activate') => Promise<{ success: boolean; error?: string }>;
   fetchReports: () => Promise<void>;
-  resolveReport: (reportId: string, action: 'resolve' | 'dismiss') => Promise<{ success: boolean; error?: string }>;
+  resolveReport: (reportId: string, action: 'resolve' | 'dismiss' | 'open') => Promise<{ success: boolean; error?: string }>;
   fetchAnalytics: () => Promise<void>;
   reset: () => void;
 }
@@ -65,7 +65,9 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     try {
       await adminApi.verifyRecruiter(recruiterId, action, note);
       set((state) => ({
-        pendingRecruiters: state.pendingRecruiters.filter((r) => r.id !== recruiterId),
+        pendingRecruiters: state.pendingRecruiters.map((r) => 
+          r.id === recruiterId ? { ...r, status: action === 'approve' ? 'verified' : 'rejected' } : r
+        ),
       }));
       return { success: true };
     } catch (err: any) {
@@ -87,7 +89,9 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     try {
       await adminApi.reviewJob(jobId, action, reason);
       set((state) => ({
-        pendingJobs: state.pendingJobs.filter((j) => j.id !== jobId),
+        pendingJobs: state.pendingJobs.map((j) =>
+          j.id === jobId ? { ...j, status: action === 'approve' ? 'published' : action === 'reject' ? 'rejected' : 'archived' } : j
+        ),
       }));
       return { success: true };
     } catch (err: any) {
@@ -105,11 +109,11 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     }
   },
 
-  suspendUser: async (userId) => {
+  updateUserStatus: async (userId, action) => {
     try {
-      await adminApi.suspendUser(userId);
+      await adminApi.updateUserStatus(userId, action);
       set((state) => ({
-        users: state.users.map((u) => u.id === userId ? { ...u, status: 'suspended' } : u),
+        users: state.users.map((u) => u.id === userId ? { ...u, status: action === 'suspend' ? 'suspended' : 'active' } : u),
       }));
       return { success: true };
     } catch (err: any) {
@@ -131,7 +135,9 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     try {
       await adminApi.resolveReport(reportId, action);
       set((state) => ({
-        reports: state.reports.filter((r) => r.id !== reportId),
+        reports: state.reports.map((r) =>
+          r.id === reportId ? { ...r, status: action === 'resolve' ? 'resolved' : action === 'dismiss' ? 'dismissed' : 'open' } : r
+        ),
       }));
       return { success: true };
     } catch (err: any) {

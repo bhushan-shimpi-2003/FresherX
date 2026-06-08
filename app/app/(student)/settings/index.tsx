@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, SafeAreaView, Alert,
+  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, SafeAreaView, Alert, Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Moon, Sun, Bell, Globe, Shield, LogOut, ChevronRight } from 'lucide-react-native';
@@ -16,10 +16,16 @@ export default function SettingsScreen() {
   const { themeMode, notificationsEnabled, setThemeMode, setNotificationsEnabled } = useSettingsStore();
 
   const handleLogout = () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: logout },
-    ]);
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to log out?')) {
+        logout();
+      }
+    } else {
+      Alert.alert('Log out', 'Are you sure you want to log out?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log out', style: 'destructive', onPress: logout },
+      ]);
+    }
   };
 
   const isDark = themeMode === 'dark';

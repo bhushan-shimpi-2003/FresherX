@@ -41,6 +41,8 @@ export default function CreateJobScreen() {
   const [selectedJobType, setSelectedJobType] = useState('Full-time');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [isRemote, setIsRemote] = useState(false);
+  const [referralAvailable, setReferralAvailable] = useState(false);
+  const [referralSlots, setReferralSlots] = useState('');
 
   const { control, handleSubmit, formState: { errors }, trigger } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -79,6 +81,8 @@ export default function CreateJobScreen() {
       isRemote,
       applyLink: data.applyLink,
       deadline: data.deadline,
+      referralAvailable,
+      referralSlots: referralAvailable && referralSlots ? parseInt(referralSlots) : 0,
     };
 
     const result = await createJob(user.id, payload);
@@ -230,6 +234,21 @@ export default function CreateJobScreen() {
                 onPress={() => setIsRemote((v) => !v)}
                 style={{ marginBottom: 16, alignSelf: 'flex-start' }}
               />
+              <Chip
+                label="🤝 Referral Available"
+                selected={referralAvailable}
+                onPress={() => setReferralAvailable((v) => !v)}
+                style={{ marginBottom: 16, alignSelf: 'flex-start' }}
+              />
+              {referralAvailable && (
+                <Input
+                  label="Referral Slots"
+                  placeholder="e.g. 5"
+                  keyboardType="numeric"
+                  value={referralSlots}
+                  onChangeText={setReferralSlots}
+                />
+              )}
               {!isRemote && (
                 <Controller control={control} name="location" render={({ field: { value, onChange, onBlur } }) => (
                   <Input label="Location" placeholder="City, State" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.location?.message} />

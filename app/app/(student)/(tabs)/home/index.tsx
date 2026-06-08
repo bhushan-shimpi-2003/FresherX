@@ -5,19 +5,20 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Bell, Sliders } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useTheme } from '../../../theme';
-import { useAuthStore } from '../../../store/auth.store';
-import { useJobsStore } from '../../../store/jobs.store';
-import { useNotificationsStore } from '../../../store/notifications.store';
-import { SearchBar } from '../../../components/ui/SearchBar';
-import { Chip } from '../../../components/ui/Chip';
-import { JobCard } from '../../../components/cards/JobCard';
-import { JobCardSkeleton } from '../../../components/ui/Skeleton';
-import { EmptyState } from '../../../components/ui/EmptyState';
-import { Avatar } from '../../../components/ui/Avatar';
-import { useUserStore } from '../../../store/user.store';
+import { useTheme } from '../../../../theme';
+import { useAuthStore } from '../../../../store/auth.store';
+import { useJobsStore } from '../../../../store/jobs.store';
+import { useNotificationsStore } from '../../../../store/notifications.store';
+import { SearchBar } from '../../../../components/ui/SearchBar';
+import { Chip } from '../../../../components/ui/Chip';
+import { JobCard } from '../../../../components/cards/JobCard';
+import { JobCardSkeleton } from '../../../../components/ui/Skeleton';
+import { EmptyState } from '../../../../components/ui/EmptyState';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { useUserStore } from '../../../../store/user.store';
 import { TouchableOpacity } from 'react-native';
 import { Briefcase } from 'lucide-react-native';
+import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
 
 const JOB_TYPE_FILTERS = ['All', 'Internship', 'Full-time', 'Remote', 'Part-time'];
 
@@ -72,29 +73,24 @@ export default function StudentHomeScreen() {
 
   const renderHeader = () => (
     <>
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <View style={styles.greeting}>
-          <Text style={[styles.greetingHello, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
-            Good morning 👋
-          </Text>
-          <Text style={[styles.greetingName, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-            {profile?.fullName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Fresher'}
-          </Text>
-        </View>
-        <View style={styles.topActions}>
-          <TouchableOpacity
-            onPress={() => router.push('/(student)/notifications')}
-            style={[styles.iconBtn, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
-          >
-            <Bell size={20} color={theme.colors.text} />
-            {unreadCount > 0 && <View style={[styles.dot, { backgroundColor: theme.colors.error }]} />}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/(student)/profile')}>
-            <Avatar uri={profile?.avatar} name={profile?.fullName} size={40} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ScreenHeader
+        title={profile?.fullName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Fresher'}
+        subtitle="Good morning 👋"
+        rightAction={
+          <View style={styles.topActions}>
+            <TouchableOpacity
+              onPress={() => router.push('/(student)/notifications')}
+              style={[styles.iconBtn, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+            >
+              <Bell size={20} color={theme.colors.text} />
+              {unreadCount > 0 && <View style={[styles.dot, { backgroundColor: theme.colors.error }]} />}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/(student)/profile')}>
+              <Avatar uri={profile?.avatar} name={profile?.fullName} size={40} />
+            </TouchableOpacity>
+          </View>
+        }
+      />
 
       {/* Search */}
       <SearchBar
@@ -176,17 +172,6 @@ export default function StudentHomeScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 20,
-  },
-  greeting: { gap: 2 },
-  greetingHello: { fontSize: 13 },
-  greetingName: { fontSize: 22, letterSpacing: -0.3 },
   topActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBtn: {
     width: 40,

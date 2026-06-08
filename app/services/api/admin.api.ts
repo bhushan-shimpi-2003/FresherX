@@ -8,8 +8,12 @@ export const adminApi = {
   },
 
   fetchPendingRecruiters: async (): Promise<PendingRecruiter[]> => {
-    const { data } = await api.get('/admin/recruiters/pending');
-    return data;
+    const { data } = await api.get('/admin/recruiters');
+    return data.map((rec: any) => ({
+      ...rec,
+      fullName: rec.full_name,
+      createdAt: rec.created_at,
+    }));
   },
 
   verifyRecruiter: async (recruiterId: string, action: 'approve' | 'reject', note?: string) => {
@@ -17,8 +21,16 @@ export const adminApi = {
   },
 
   fetchPendingJobs: async (): Promise<AdminJob[]> => {
-    const { data } = await api.get('/admin/jobs/pending');
-    return data;
+    const { data } = await api.get('/admin/jobs');
+    return data.map((job: any) => ({
+      ...job,
+      company: job.company || { name: 'Unknown Company', logo: null },
+      createdAt: job.created_at,
+      reportCount: job.report_count || 0,
+      type: job.job_type,
+      salary: job.salary_min ? { min: job.salary_min, max: job.salary_max, currency: job.salary_currency } : null,
+      recruiter: job.recruiter ? { fullName: job.recruiter.full_name, email: job.recruiter.email } : { fullName: 'Unknown', email: '' },
+    }));
   },
 
   reviewJob: async (jobId: string, action: 'approve' | 'reject' | 'spam', reason?: string) => {
@@ -30,8 +42,8 @@ export const adminApi = {
     return data;
   },
 
-  suspendUser: async (userId: string) => {
-    await api.post(`/admin/users/${userId}/suspend`);
+  updateUserStatus: async (userId: string, action: 'suspend' | 'activate') => {
+    await api.post(`/admin/users/${userId}/status`, { action });
   },
 
   fetchReports: async (): Promise<Report[]> => {
@@ -39,7 +51,7 @@ export const adminApi = {
     return data;
   },
 
-  resolveReport: async (reportId: string, action: 'resolve' | 'dismiss') => {
+  resolveReport: async (reportId: string, action: 'resolve' | 'dismiss' | 'open') => {
     await api.post(`/admin/reports/${reportId}/resolve`, { action });
   },
 };

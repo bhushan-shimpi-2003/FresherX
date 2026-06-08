@@ -59,8 +59,7 @@ export default function VerifyRecruitersScreen() {
     { key: 'rejected', label: 'Rejected' },
   ];
 
-  // Mock data for other tabs since API currently only fetches pending
-  const data = activeTab === 'pending' ? pendingRecruiters : [];
+  const data = pendingRecruiters.filter((rec) => rec.status === activeTab);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
@@ -96,14 +95,14 @@ export default function VerifyRecruitersScreen() {
               onPress={() => setActiveTab(tab.key)}
             >
               <Text style={[styles.tabText, { color: activeTab === tab.key ? '#FFF' : theme.colors.textMuted, fontFamily: activeTab === tab.key ? theme.typography.fontFamily.semiBold : theme.typography.fontFamily.medium }]}>
-                {tab.label} {tab.key === 'pending' && pendingRecruiters.length > 0 ? `(${pendingRecruiters.length})` : ''}
+                {tab.label} {tab.key === 'pending' && pendingRecruiters.filter(r => r.status === 'pending').length > 0 ? `(${pendingRecruiters.filter(r => r.status === 'pending').length})` : ''}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {isLoading && activeTab === 'pending' ? (
+      {isLoading && pendingRecruiters.length === 0 ? (
         <Loader fullScreen />
       ) : (
         <FlatList
@@ -150,8 +149,8 @@ export default function VerifyRecruitersScreen() {
                 </View>
               )}
 
-              {activeTab === 'pending' && (
-                <View style={styles.actions}>
+              <View style={styles.actions}>
+                {item.status !== 'verified' && (
                   <TouchableOpacity
                     style={[styles.actionBtn, { backgroundColor: theme.colors.success + '10', borderColor: theme.colors.success + '40' }]}
                     onPress={() => handleAction(item.id, item.fullName, 'approve')}
@@ -161,6 +160,8 @@ export default function VerifyRecruitersScreen() {
                       Approve
                     </Text>
                   </TouchableOpacity>
+                )}
+                {item.status !== 'rejected' && (
                   <TouchableOpacity
                     style={[styles.actionBtn, { backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error + '40' }]}
                     onPress={() => handleAction(item.id, item.fullName, 'reject')}
@@ -170,8 +171,8 @@ export default function VerifyRecruitersScreen() {
                       Reject
                     </Text>
                   </TouchableOpacity>
-                </View>
-              )}
+                )}
+              </View>
             </Animated.View>
           )}
           ListEmptyComponent={

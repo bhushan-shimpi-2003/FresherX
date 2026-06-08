@@ -129,13 +129,16 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
         </View>
 
         {/* Skills */}
-        {job.skills.length > 0 && (
+        {(job.skills.length > 0 || job.referralAvailable) && (
           <View style={styles.skills}>
-            {job.skills.slice(0, 3).map((skill) => (
-              <Badge key={skill} label={skill} variant="primary" size="sm" />
+            {job.referralAvailable && (
+              <Badge label="🤝 Referral Available" variant="primary" size="sm" />
+            )}
+            {job.skills.slice(0, job.referralAvailable ? 2 : 3).map((skill) => (
+              <Badge key={skill} label={skill} variant="default" size="sm" />
             ))}
-            {job.skills.length > 3 && (
-              <Badge label={`+${job.skills.length - 3}`} variant="default" size="sm" />
+            {job.skills.length > (job.referralAvailable ? 2 : 3) && (
+              <Badge label={`+${job.skills.length - (job.referralAvailable ? 2 : 3)}`} variant="default" size="sm" />
             )}
           </View>
         )}

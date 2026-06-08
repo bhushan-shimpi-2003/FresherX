@@ -52,13 +52,12 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-router.get('/recruiters/pending', async (req, res) => {
+router.get('/recruiters', async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('recruiter_profiles')
       .select(`*, company:companies(*)`)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     res.json(data);
@@ -88,13 +87,12 @@ router.post('/recruiters/:id/verify', async (req, res) => {
   }
 });
 
-router.get('/jobs/pending', async (req, res) => {
+router.get('/jobs', async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, company:companies(*), recruiter:recruiter_profiles(full_name, email)`)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true });
+      .select(`*, company:companies(*), recruiter:profiles(full_name, email)`)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     res.json(data);
@@ -137,12 +135,13 @@ router.get('/users', async (req, res) => {
   }
 });
 
-router.post('/users/:id/suspend', async (req, res) => {
+router.post('/users/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
+    const { action } = req.body;
     const { error } = await supabaseAdmin
       .from('profiles')
-      .update({ status: 'suspended' })
+      .update({ status: action === 'suspend' ? 'suspended' : 'active' })
       .eq('id', id);
 
     if (error) throw error;
@@ -172,7 +171,7 @@ router.post('/reports/:id/resolve', async (req, res) => {
     const { action } = req.body;
     const { error } = await supabaseAdmin
       .from('reports')
-      .update({ status: action === 'resolve' ? 'resolved' : 'dismissed' })
+      .update({ status: action === 'resolve' ? 'resolved' : action === 'dismiss' ? 'dismissed' : 'open' })
       .eq('id', id);
 
     if (error) throw error;

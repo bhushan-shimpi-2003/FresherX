@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Alert, TextInput, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, MoreVertical, Ban, Mail, Search, Shield, Filter } from 'lucide-react-native';
@@ -16,7 +16,7 @@ type RoleTab = 'all' | 'student' | 'recruiter' | 'admin';
 export default function AdminUsersScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { users, isLoading, fetchUsers, suspendUser } = useAdminStore();
+  const { users, isLoading, error, fetchUsers, updateUserStatus } = useAdminStore();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRole, setActiveRole] = useState<RoleTab>('all');
@@ -25,21 +25,28 @@ export default function AdminUsersScreen() {
     fetchUsers();
   }, []);
 
-  const handleSuspend = (userId: string, email: string) => {
-    Alert.alert(
-      'Suspend User',
-      `Are you sure you want to suspend the account for ${email}? They will no longer be able to log in.`,
-      [
+  const handleSuspend = (userId: string, email: string, action: 'suspend' | 'activate') => {
+    const title = action === 'suspend' ? 'Suspend User' : 'Reactivate User';
+    const msg = action === 'suspend'
+      ? `Are you sure you want to suspend the account for ${email}? They will no longer be able to log in.`
+      : `Are you sure you want to reactivate the account for ${email}?`;
+    
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${msg}`)) {
+        updateUserStatus(userId, action);
+      }
+    } else {
+      Alert.alert(title, msg, [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Suspend',
-          style: 'destructive',
+          text: action === 'suspend' ? 'Suspend' : 'Reactivate',
+          style: action === 'suspend' ? 'destructive' : 'default',
           onPress: async () => {
-            await suspendUser(userId);
+            await updateUserStatus(userId, action);
           },
         },
-      ]
-    );
+      ]);
+    }
   };
 
   const filteredUsers = useMemo(() => {
@@ -87,11 +94,18 @@ export default function AdminUsersScreen() {
           <Badge label={item.status} variant={item.status === 'active' ? 'success' : 'error'} size="sm" />
         </View>
 
-        {item.status !== 'suspended' && item.role !== 'admin' && (
-          <TouchableOpacity onPress={() => handleSuspend(item.id, item.email)} style={[styles.suspendBtn, { backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error + '30' }]}>
-            <Ban size={14} color={theme.colors.error} />
-            <Text style={[styles.suspendText, { color: theme.colors.error }]}>Suspend</Text>
-          </TouchableOpacity>
+        {item.role !== 'admin' && (
+          item.status !== 'suspended' ? (
+            <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'suspend')} style={[styles.suspendBtn, { backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error + '30' }]}>
+              <Ban size={14} color={theme.colors.error} />
+              <Text style={[styles.suspendText, { color: theme.colors.error }]}>Suspend</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'activate')} style={[styles.suspendBtn, { backgroundColor: theme.colors.success + '10', borderColor: theme.colors.success + '30' }]}>
+              <Shield size={14} color={theme.colors.success} />
+              <Text style={[styles.suspendText, { color: theme.colors.success }]}>Reactivate</Text>
+            </TouchableOpacity>
+          )
         )}
       </View>
     </Animated.View>

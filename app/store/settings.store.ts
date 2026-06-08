@@ -18,7 +18,7 @@ interface SettingsStore {
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
-  themeMode: 'dark',
+  themeMode: 'light',
   notificationsEnabled: true,
   emailNotifications: true,
   language: 'en',
@@ -44,7 +44,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const saved = await storage.get<Partial<SettingsStore>>(STORAGE_KEYS.THEME);
     if (saved) {
       set({
-        themeMode: saved.themeMode ?? 'dark',
+        themeMode: saved.themeMode ?? 'light',
         notificationsEnabled: saved.notificationsEnabled ?? true,
         emailNotifications: saved.emailNotifications ?? true,
         language: saved.language ?? 'en',

@@ -1,6 +1,7 @@
 // TypeScript types for Recruiter
 
 export type RecruiterStatus = 'pending' | 'verified' | 'rejected';
+export type PosterType = 'HR' | 'INSIDER' | 'ALUMNI' | 'MENTOR';
 
 export interface RecruiterProfile {
   id: string;
@@ -10,6 +11,7 @@ export interface RecruiterProfile {
   avatar: string | null;
   phone: string | null;
   designation: string | null;
+  posterType: PosterType | null;
 
   // Company
   companyId: string | null;

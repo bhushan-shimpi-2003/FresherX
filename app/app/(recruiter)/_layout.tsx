@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { LayoutDashboard, PlusCircle, FileText, BarChart2, User } from 'lucide-react-native';
+import { LayoutDashboard, PlusCircle, FileText, BarChart2, User, MessageSquare } from 'lucide-react-native';
 import { useTheme } from '../../theme';
 
 export default function RecruiterTabsLayout() {
@@ -62,6 +62,15 @@ export default function RecruiterTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="chat/index"
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color, focused }) => (
+            <MessageSquare size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile/index"
         options={{
           title: 'Company',
@@ -71,6 +80,8 @@ export default function RecruiterTabsLayout() {
         }}
       />
       {/* Hidden screens */}
+      <Tabs.Screen name="chat/[id]" options={{ href: null }} />
+      <Tabs.Screen name="chat/requests" options={{ href: null }} />
       <Tabs.Screen name="post/[id]" options={{ href: null }} />
       <Tabs.Screen name="settings/index" options={{ href: null }} />
       <Tabs.Screen name="onboarding/company-setup" options={{ href: null }} />

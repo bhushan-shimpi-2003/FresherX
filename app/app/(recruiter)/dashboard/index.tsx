@@ -11,6 +11,7 @@ import { useAuthStore } from '../../../store/auth.store';
 import { useRecruiterStore } from '../../../store/recruiter.store';
 import { Loader } from '../../../components/ui/Loader';
 import { Badge } from '../../../components/ui/Badge';
+import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { formatCount, formatRelativeTime } from '../../../utils/formatters';
 import { palette } from '../../../constants/colors';
 
@@ -68,15 +69,11 @@ export default function RecruiterDashboardScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Header section (replaces rigid header card with a softer area) */}
-        <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.headerContainer}>
-          <View style={styles.headerTop}>
-            <View>
-              <Text style={styles.welcomeText}>Welcome back 👋</Text>
-              <Text style={[styles.companyName, { color: theme.colors.text }]}>
-                {company?.name ?? profile?.fullName ?? 'Recruiter'}
-              </Text>
-            </View>
+        {/* Header section */}
+        <ScreenHeader
+          title={company?.name ?? profile?.fullName ?? 'Recruiter'}
+          subtitle="Welcome back 👋"
+          rightAction={
             <TouchableOpacity
               onPress={() => router.push('/(recruiter)/create')}
               style={[styles.postBtn, { backgroundColor: theme.colors.primary }]}
@@ -85,7 +82,10 @@ export default function RecruiterDashboardScreen() {
               <Plus size={18} color="#FFF" />
               <Text style={styles.postBtnText}>Post Job</Text>
             </TouchableOpacity>
-          </View>
+          }
+        />
+        <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.headerContainer}>
+
 
           {/* Verification status */}
           {profile?.status !== 'verified' && (
@@ -190,10 +190,7 @@ export default function RecruiterDashboardScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { paddingBottom: 100 },
-  headerContainer: { paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16, gap: 16 },
-  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  welcomeText: { color: '#888', fontSize: 13, fontFamily: 'Inter_400Regular', marginBottom: 2 },
-  companyName: { fontSize: 24, letterSpacing: -0.5 },
+  headerContainer: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 16, gap: 16 },
   postBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 16, paddingVertical: 10, borderRadius: 16,

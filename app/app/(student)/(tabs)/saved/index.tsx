@@ -5,13 +5,14 @@ import {
 import { useRouter } from 'expo-router';
 import { ChevronLeft, BookmarkX } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useTheme } from '../../../theme';
-import { useAuthStore } from '../../../store/auth.store';
-import { useJobsStore } from '../../../store/jobs.store';
-import { JobCard } from '../../../components/cards/JobCard';
-import { EmptyState } from '../../../components/ui/EmptyState';
-import { SearchBar } from '../../../components/ui/SearchBar';
-import { Loader } from '../../../components/ui/Loader';
+import { useTheme } from '../../../../theme';
+import { useAuthStore } from '../../../../store/auth.store';
+import { useJobsStore } from '../../../../store/jobs.store';
+import { JobCard } from '../../../../components/cards/JobCard';
+import { EmptyState } from '../../../../components/ui/EmptyState';
+import { SearchBar } from '../../../../components/ui/SearchBar';
+import { Loader } from '../../../../components/ui/Loader';
+import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
 import { Bookmark } from 'lucide-react-native';
 
 export default function SavedJobsScreen() {
@@ -32,15 +33,7 @@ export default function SavedJobsScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-          Saved Jobs
-        </Text>
-        <Text style={[styles.count, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
-          {savedJobs.length} saved
-        </Text>
-      </View>
+      <ScreenHeader title="Saved Jobs" subtitle={`${savedJobs.length} saved`} />
 
       <SearchBar
         value={search}
@@ -80,7 +73,4 @@ export default function SavedJobsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 16 },
-  title: { fontSize: 24, letterSpacing: -0.3 },
-  count: { fontSize: 13, marginTop: 4 },
 });

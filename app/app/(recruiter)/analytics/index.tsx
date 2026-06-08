@@ -8,6 +8,7 @@ import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
 import { useRecruiterStore } from '../../../store/recruiter.store';
+import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { formatCount } from '../../../utils/formatters';
 
 export default function RecruiterAnalyticsScreen() {
@@ -25,10 +26,8 @@ export default function RecruiterAnalyticsScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
+      <ScreenHeader title="Analytics" subtitle="Track your performance" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <Text style={[styles.pageTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-          Analytics
-        </Text>
 
         {/* Summary cards */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.grid}>
@@ -148,7 +147,6 @@ export default function RecruiterAnalyticsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { padding: 16, paddingBottom: 100 },
-  pageTitle: { fontSize: 24, letterSpacing: -0.3, marginBottom: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 28 },
   statCard: { flex: 1, minWidth: '45%', padding: 16, borderRadius: 16, borderWidth: 1, alignItems: 'center', gap: 8 },
   iconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

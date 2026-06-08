@@ -12,6 +12,7 @@ import { useRecruiterStore } from '../../../store/recruiter.store';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
+import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { formatCount } from '../../../utils/formatters';
 import { palette } from '../../../constants/colors';
 
@@ -40,14 +41,15 @@ export default function RecruiterProfileScreen() {
           />
         </View>
 
-        <View style={styles.topBar}>
-          <Text style={[styles.pageTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-            Profile
-          </Text>
-          <TouchableOpacity onPress={() => router.push('/(recruiter)/settings' as any)} style={[styles.settingsBtn, { backgroundColor: theme.colors.card + '90', borderColor: theme.colors.border }]}>
-            <Settings size={20} color={theme.colors.text} />
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader
+          title="Profile"
+          subtitle="Manage your company details"
+          rightAction={
+            <TouchableOpacity onPress={() => router.push('/(recruiter)/settings' as any)} style={[styles.settingsBtn, { backgroundColor: theme.colors.card + '90', borderColor: theme.colors.border }]}>
+              <Settings size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+          }
+        />
 
         {/* Profile card */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={[styles.profileCard, { backgroundColor: theme.colors.card + 'A0', borderColor: theme.colors.border }]}>
@@ -134,8 +136,6 @@ export default function RecruiterProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { paddingHorizontal: 20 },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 32, paddingBottom: 24 },
-  pageTitle: { fontSize: 28, letterSpacing: -0.5 },
   settingsBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   profileCard: { alignItems: 'center', padding: 24, borderRadius: 24, borderWidth: 1, marginBottom: 16, gap: 10 },
   avatarWrap: { padding: 4, borderRadius: 44, backgroundColor: '#FFF', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },

@@ -29,10 +29,15 @@ export default function AdminJobsScreen() {
   }, []);
 
   const handleAction = (jobId: string, action: 'approve' | 'reject' | 'spam') => {
-    Alert.alert(
-      `${action.charAt(0).toUpperCase() + action.slice(1)} Job`,
-      `Are you sure you want to ${action} this job post?`,
-      [
+    const title = `${action.charAt(0).toUpperCase() + action.slice(1)} Job`;
+    const msg = `Are you sure you want to ${action} this job post?`;
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${msg}`)) {
+        reviewJob({ jobId, action });
+      }
+    } else {
+      Alert.alert(title, msg, [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Confirm',
@@ -41,8 +46,8 @@ export default function AdminJobsScreen() {
             await reviewJob({ jobId, action });
           },
         },
-      ]
-    );
+      ]);
+    }
   };
 
   const toggleExpand = (id: string) => {
@@ -56,7 +61,12 @@ export default function AdminJobsScreen() {
     { key: 'rejected', label: 'Rejected' },
   ];
 
-  const data = activeTab === 'pending' ? pendingJobs : [];
+  const data = pendingJobs.filter((job) => {
+    if (activeTab === 'pending') return job.status === 'pending';
+    if (activeTab === 'approved') return job.status === 'published';
+    if (activeTab === 'rejected') return job.status === 'rejected';
+    return false;
+  });
 
   const renderJob = ({ item, index }: { item: AdminJob; index: number }) => {
     const isExpanded = expandedJobId === item.id;
@@ -116,8 +126,8 @@ export default function AdminJobsScreen() {
               </Text>
             </View>
 
-            {activeTab === 'pending' && (
-              <View style={styles.actions}>
+            <View style={styles.actions}>
+              {item.status !== 'published' && (
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: theme.colors.success + '15', borderColor: theme.colors.success + '40' }]}
                   onPress={() => handleAction(item.id, 'approve')}
@@ -125,7 +135,9 @@ export default function AdminJobsScreen() {
                   <Check size={18} color={theme.colors.success} />
                   <Text style={[styles.actionText, { color: theme.colors.success }]}>Approve</Text>
                 </TouchableOpacity>
-                
+              )}
+              
+              {item.status !== 'rejected' && (
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: theme.colors.error + '15', borderColor: theme.colors.error + '40' }]}
                   onPress={() => handleAction(item.id, 'reject')}
@@ -133,15 +145,17 @@ export default function AdminJobsScreen() {
                   <X size={18} color={theme.colors.error} />
                   <Text style={[styles.actionText, { color: theme.colors.error }]}>Reject</Text>
                 </TouchableOpacity>
+              )}
 
+              {item.status !== 'archived' && (
                 <TouchableOpacity
                   style={[styles.iconBtn, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
                   onPress={() => handleAction(item.id, 'spam')}
                 >
                   <ShieldAlert size={18} color={theme.colors.error} />
                 </TouchableOpacity>
-              </View>
-            )}
+              )}
+            </View>
           </View>
         )}
       </Animated.View>
@@ -193,14 +207,14 @@ export default function AdminJobsScreen() {
               onPress={() => setActiveTab(item.key)}
             >
               <Text style={[styles.filterPillText, { color: activeTab === item.key ? theme.colors.background : theme.colors.textMuted, fontFamily: activeTab === item.key ? theme.typography.fontFamily.semiBold : theme.typography.fontFamily.medium }]}>
-                {item.label} {item.key === 'pending' && pendingJobs.length > 0 ? `(${pendingJobs.length})` : ''}
+                {item.label} {item.key === 'pending' && pendingJobs.filter(j => j.status === 'pending').length > 0 ? `(${pendingJobs.filter(j => j.status === 'pending').length})` : ''}
               </Text>
             </TouchableOpacity>
           )}
         />
       </View>
 
-      {isLoading && activeTab === 'pending' ? (
+      {isLoading && pendingJobs.length === 0 ? (
         <Loader fullScreen />
       ) : (
         <FlatList

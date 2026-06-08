@@ -31,7 +31,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
         .from('student_profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       set({ profile: data as StudentProfile, isLoading: false });

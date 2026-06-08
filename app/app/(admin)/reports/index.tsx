@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, CheckCircle, XCircle, AlertTriangle, MessageSquare, Flag, Trash2 } from 'lucide-react-native';
@@ -23,10 +23,15 @@ export default function AdminReportsScreen() {
   }, []);
 
   const handleResolve = (reportId: string, action: 'resolve' | 'dismiss') => {
-    Alert.alert(
-      action === 'resolve' ? 'Resolve Report' : 'Dismiss Report',
-      `Are you sure you want to ${action} this report?`,
-      [
+    const title = action === 'resolve' ? 'Resolve Report' : 'Dismiss Report';
+    const msg = `Are you sure you want to ${action} this report?`;
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${msg}`)) {
+        resolveReport(reportId, action);
+      }
+    } else {
+      Alert.alert(title, msg, [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Confirm',
@@ -34,8 +39,8 @@ export default function AdminReportsScreen() {
             await resolveReport(reportId, action);
           },
         },
-      ]
-    );
+      ]);
+    }
   };
 
   const tabs: { key: Tab; label: string }[] = [
@@ -43,8 +48,11 @@ export default function AdminReportsScreen() {
     { key: 'resolved', label: 'Resolved' },
   ];
 
-  // API only fetches open reports right now, mock for resolved
-  const data = activeTab === 'open' ? reports : [];
+  const data = reports.filter((r) => {
+    if (activeTab === 'open') return r.status === 'open';
+    if (activeTab === 'resolved') return r.status === 'resolved' || r.status === 'dismissed';
+    return false;
+  });
 
   const getPriority = (type: string) => {
     if (type.includes('harassment') || type.includes('scam') || type.includes('fake')) return { label: 'High Priority', color: theme.colors.error };
@@ -89,8 +97,8 @@ export default function AdminReportsScreen() {
           </Text>
         </View>
 
-        {activeTab === 'open' && (
-          <View style={styles.actions}>
+        <View style={styles.actions}>
+          {item.status !== 'resolved' && (
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: theme.colors.success + '15', borderColor: theme.colors.success + '40' }]}
               onPress={() => handleResolve(item.id, 'resolve')}
@@ -98,7 +106,9 @@ export default function AdminReportsScreen() {
               <CheckCircle size={16} color={theme.colors.success} />
               <Text style={[styles.actionText, { color: theme.colors.success }]}>Resolve</Text>
             </TouchableOpacity>
-            
+          )}
+          
+          {item.status !== 'dismissed' && (
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
               onPress={() => handleResolve(item.id, 'dismiss')}
@@ -106,8 +116,18 @@ export default function AdminReportsScreen() {
               <Trash2 size={16} color={theme.colors.error} />
               <Text style={[styles.actionText, { color: theme.colors.error }]}>Dismiss</Text>
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+
+          {item.status !== 'open' && (
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: theme.colors.warning + '15', borderColor: theme.colors.warning + '40' }]}
+              onPress={() => handleResolve(item.id, 'open' as 'resolve' | 'dismiss')}
+            >
+              <AlertTriangle size={16} color={theme.colors.warning} />
+              <Text style={[styles.actionText, { color: theme.colors.warning }]}>Reopen</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </Animated.View>
     );
   };
@@ -142,14 +162,14 @@ export default function AdminReportsScreen() {
               onPress={() => setActiveTab(tab.key)}
             >
               <Text style={[styles.tabText, { color: activeTab === tab.key ? '#FFF' : theme.colors.textMuted, fontFamily: activeTab === tab.key ? theme.typography.fontFamily.semiBold : theme.typography.fontFamily.medium }]}>
-                {tab.label} {tab.key === 'open' && reports.length > 0 ? `(${reports.length})` : ''}
+                {tab.label} {tab.key === 'open' && reports.filter(r => r.status === 'open').length > 0 ? `(${reports.filter(r => r.status === 'open').length})` : ''}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {isLoading && activeTab === 'open' ? (
+      {isLoading && reports.length === 0 ? (
         <Loader fullScreen />
       ) : (
         <FlatList

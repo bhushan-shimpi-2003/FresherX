@@ -18,6 +18,7 @@ export interface PendingRecruiter {
   id: string;
   fullName: string;
   email: string;
+  status: 'pending' | 'verified' | 'rejected';
   phone: string | null;
   designation: string | null;
   company: {

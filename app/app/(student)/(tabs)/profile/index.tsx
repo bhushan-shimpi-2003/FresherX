@@ -10,13 +10,15 @@ import {
   Briefcase, MapPin, Mail, Phone, Star,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '../../../theme';
-import { useAuthStore } from '../../../store/auth.store';
-import { useUserStore } from '../../../store/user.store';
-import { Avatar } from '../../../components/ui/Avatar';
-import { Badge } from '../../../components/ui/Badge';
-import { Button } from '../../../components/ui/Button';
-import { palette } from '../../../constants/colors';
+import { useTheme } from '../../../../theme';
+import { useAuthStore } from '../../../../store/auth.store';
+import { useUserStore } from '../../../../store/user.store';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Badge } from '../../../../components/ui/Badge';
+import { Button } from '../../../../components/ui/Button';
+import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
+import { palette } from '../../../../constants/colors';
+import { calculateProfileCompleteness } from '../../../../utils/profileScorer';
 
 export default function StudentProfileScreen() {
   const theme = useTheme();
@@ -58,11 +60,7 @@ export default function StudentProfileScreen() {
     }
   };
 
-  const completionItems = [
-    !!profile?.fullName, !!profile?.avatar, !!profile?.college, !!profile?.skills?.length,
-    !!profile?.resumeUrl, !!profile?.bio,
-  ];
-  const completionPct = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100);
+  const completionPct = calculateProfileCompleteness(profile);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
@@ -75,15 +73,15 @@ export default function StudentProfileScreen() {
           end={{ x: 1, y: 1 }}
         />
 
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <Text style={[styles.screenTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-            Profile
-          </Text>
-          <TouchableOpacity onPress={() => router.push('/(student)/settings')}>
-            <Settings size={22} color={theme.colors.text} />
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader
+          title="Profile"
+          subtitle="Manage your account"
+          rightAction={
+            <TouchableOpacity onPress={() => router.push('/(student)/settings')}>
+              <Settings size={22} color={theme.colors.text} />
+            </TouchableOpacity>
+          }
+        />
 
         {/* Profile card */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={[styles.profileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
@@ -164,11 +162,21 @@ export default function StudentProfileScreen() {
               )}
             </View>
             {profile?.resumeUrl ? (
-              <View style={[styles.resumeItem, { backgroundColor: theme.colors.primary + '12', borderColor: theme.colors.primary + '25', marginTop: 12 }]}>
-                <FileText size={18} color={theme.colors.primary} />
-                <Text style={[styles.resumeName, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium }]} numberOfLines={1}>
-                  {profile.resumeName ?? 'resume.pdf'}
-                </Text>
+              <View>
+                <View style={[styles.resumeItem, { backgroundColor: theme.colors.primary + '12', borderColor: theme.colors.primary + '25', marginTop: 12 }]}>
+                  <FileText size={18} color={theme.colors.primary} />
+                  <Text style={[styles.resumeName, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium }]} numberOfLines={1}>
+                    {profile.resumeName ?? 'resume.pdf'}
+                  </Text>
+                </View>
+                <Button 
+                  label="Analyze Resume with AI" 
+                  variant="outline" 
+                  size="sm" 
+                  leftIcon={<Star size={15} color={theme.colors.primary} />}
+                  onPress={() => alert('AI Review triggered!')}
+                  style={{ marginTop: 12 }}
+                />
               </View>
             ) : (
               <Text style={[styles.emptyResume, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular, marginTop: 12 }]}>
@@ -188,8 +196,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { paddingHorizontal: 16 },
   headerGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 200 },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, paddingBottom: 20 },
-  screenTitle: { fontSize: 24, letterSpacing: -0.3 },
   profileCard: {
     alignItems: 'center', padding: 24, borderRadius: 20, borderWidth: 1, marginBottom: 12, gap: 10,
   },

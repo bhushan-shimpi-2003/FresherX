@@ -16,6 +16,7 @@ import { Input } from '../../components/ui/Input';
 import { useAuthStore } from '../../store/auth.store';
 import { GraduationCap, Briefcase } from 'lucide-react-native';
 import type { UserRole } from '../../constants/config';
+import type { PosterType } from '../../types/recruiter.types';
 
 const registerSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -34,6 +35,7 @@ export default function RegisterScreen() {
   const { register, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
+  const [selectedPosterType, setSelectedPosterType] = useState<PosterType>('HR');
 
   const { control, handleSubmit, formState: { errors }, setError } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -46,7 +48,13 @@ export default function RegisterScreen() {
   });
 
   const onSubmit = async (data: RegisterForm) => {
-    const result = await register(data.email, data.password, data.fullName, selectedRole);
+    const result = await register(
+      data.email, 
+      data.password, 
+      data.fullName, 
+      selectedRole, 
+      selectedRole === 'recruiter' ? selectedPosterType : undefined
+    );
     if (!result.success) {
       setError('root', { message: result.error });
       return;
@@ -117,6 +125,33 @@ export default function RegisterScreen() {
               </TouchableOpacity>
             </View>
           </Animated.View>
+
+          {selectedRole === 'recruiter' && (
+            <Animated.View entering={FadeInDown.delay(180).springify()} style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 13, color: theme.colors.textMuted, marginBottom: 8, fontFamily: theme.typography.fontFamily.medium }}>
+                Recruiter Profile Type
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {(['HR', 'INSIDER', 'ALUMNI', 'MENTOR'] as PosterType[]).map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    onPress={() => setSelectedPosterType(type)}
+                    style={[
+                      { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border },
+                      selectedPosterType === type && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+                    ]}
+                  >
+                    <Text style={[
+                      { fontSize: 12, fontFamily: theme.typography.fontFamily.medium },
+                      { color: selectedPosterType === type ? '#FFF' : theme.colors.textSecondary }
+                    ]}>
+                      {type}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </Animated.View>
+          )}
 
           {/* Form */}
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.form}>

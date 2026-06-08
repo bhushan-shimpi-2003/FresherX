@@ -10,6 +10,7 @@ import { Chip } from '../../../components/ui/Chip';
 import { Badge } from '../../../components/ui/Badge';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { Loader } from '../../../components/ui/Loader';
+import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { formatRelativeTime } from '../../../utils/formatters';
 import { Briefcase, Eye, Users } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -57,14 +58,10 @@ export default function RecruiterPostsScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-          My Posts
-        </Text>
-        <Text style={[styles.count, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
-          {filtered.length} posts
-        </Text>
-      </View>
+      <ScreenHeader
+        title="My Posts"
+        subtitle={`${filtered.length} posts`}
+      />
 
       {/* Filter chips */}
       <View style={styles.filterContainer}>
@@ -189,9 +186,6 @@ export default function RecruiterPostsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 16 },
-  title: { fontSize: 28, letterSpacing: -0.5 },
-  count: { fontSize: 14, marginTop: 4 },
   filterContainer: { marginBottom: 16 },
   filterScroll: { paddingHorizontal: 20, gap: 10, paddingBottom: 4 },
   filterChip: {
