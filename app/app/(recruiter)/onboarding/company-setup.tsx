@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,12 +27,32 @@ export default function CompanySetupScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { createCompany, isLoading } = useRecruiterStore();
+  const { createCompany, isLoading, company } = useRecruiterStore();
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', website: '', industry: '', size: '', location: '', description: '' },
+    defaultValues: {
+      name: company?.name ?? '',
+      website: company?.website ?? '',
+      industry: company?.industry ?? '',
+      size: company?.size ?? '',
+      location: company?.location ?? '',
+      description: company?.description ?? '',
+    },
   });
+
+  useEffect(() => {
+    if (company) {
+      reset({
+        name: company.name ?? '',
+        website: company.website ?? '',
+        industry: company.industry ?? '',
+        size: company.size ?? '',
+        location: company.location ?? '',
+        description: company.description ?? '',
+      });
+    }
+  }, [company, reset]);
 
   const onSubmit = async (data: FormData) => {
     if (!user) return;

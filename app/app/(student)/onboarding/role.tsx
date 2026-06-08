@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { GraduationCap, Briefcase, ChevronRight } from 'lucide-react-native';

@@ -41,25 +41,25 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
   const matchColor = job.matchScore ? getMatchColor(job.matchScore) : null;
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 60).springify()}
-      style={[
-        cardStyle,
-        styles.card,
-        {
-          backgroundColor: theme.colors.card,
-          borderColor: theme.colors.border,
-          borderRadius: theme.borderRadius.xl,
-        },
-      ]}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
+    <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
+      <Animated.View
+        style={[
+          cardStyle,
+          styles.card,
+          {
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderRadius: theme.borderRadius.xl,
+          },
+        ]}
       >
-        {/* Header */}
+        <TouchableOpacity
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={1}
+        >
+          {/* Header */}
         <View style={styles.header}>
           <View style={[styles.logoWrapper, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
             {job.company?.logo ? (
@@ -129,16 +129,16 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
         </View>
 
         {/* Skills */}
-        {(job.skills.length > 0 || job.referralAvailable) && (
+        {((job.skills?.length ?? 0) > 0 || job.referralAvailable) && (
           <View style={styles.skills}>
             {job.referralAvailable && (
               <Badge label="🤝 Referral Available" variant="primary" size="sm" />
             )}
-            {job.skills.slice(0, job.referralAvailable ? 2 : 3).map((skill) => (
+            {(job.skills || []).slice(0, job.referralAvailable ? 2 : 3).map((skill) => (
               <Badge key={skill} label={skill} variant="default" size="sm" />
             ))}
-            {job.skills.length > (job.referralAvailable ? 2 : 3) && (
-              <Badge label={`+${job.skills.length - (job.referralAvailable ? 2 : 3)}`} variant="default" size="sm" />
+            {(job.skills?.length ?? 0) > (job.referralAvailable ? 2 : 3) && (
+              <Badge label={`+${(job.skills?.length ?? 0) - (job.referralAvailable ? 2 : 3)}`} variant="default" size="sm" />
             )}
           </View>
         )}
@@ -159,6 +159,7 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
+      </Animated.View>
     </Animated.View>
   );
 }

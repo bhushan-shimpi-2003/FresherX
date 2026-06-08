@@ -49,7 +49,7 @@ router.put('/', async (req, res) => {
 
     const { data, error } = await supabaseAdmin
       .from('student_profiles')
-      .upsert({ user_id: userId, ...payload })
+      .upsert({ user_id: userId, ...payload }, { onConflict: 'user_id' })
       .select()
       .single();
 

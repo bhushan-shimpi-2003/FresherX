@@ -2,7 +2,8 @@ import { Tabs } from 'expo-router';
 import { Home, Bookmark, Search, Bell, User, MessageSquare } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import { useNotificationsStore } from '../../../store/notifications.store';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function TabIcon({ Icon, color, focused, badgeCount }: { Icon: any; color: string; focused: boolean; badgeCount?: number }) {
   return (
@@ -20,6 +21,7 @@ function TabIcon({ Icon, color, focused, badgeCount }: { Icon: any; color: strin
 export default function StudentTabsLayout() {
   const theme = useTheme();
   const { unreadCount } = useNotificationsStore();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -30,8 +32,8 @@ export default function StudentTabsLayout() {
           borderTopColor: theme.colors.tabBarBorder,
           borderTopWidth: 1,
           paddingTop: 8,
-          paddingBottom: 4,
-          height: 64,
+          paddingBottom: Math.max(insets.bottom, 8),
+          height: 60 + Math.max(insets.bottom, 8),
         },
         tabBarActiveTintColor: theme.colors.tabBarActive,
         tabBarInactiveTintColor: theme.colors.tabBarInactive,

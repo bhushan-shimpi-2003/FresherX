@@ -1,7 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert,
-} from 'react-native';
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +16,9 @@ import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Chip } from '../../../components/ui/Chip';
 import { Avatar } from '../../../components/ui/Avatar';
-import { POPULAR_SKILLS, DEGREES } from '../../../constants/config';
+import { POPULAR_SKILLS, DEGREES, JOB_TYPES } from '../../../constants/config';
+
+const LOCATIONS = ['Remote', 'Bangalore', 'Mumbai', 'Delhi NCR', 'Hyderabad', 'Pune', 'Chennai'];
 
 const schema = z.object({
   fullName: z.string().min(2),
@@ -36,8 +38,10 @@ export default function EditProfileScreen() {
   const { user } = useAuthStore();
   const { profile, updateProfile, uploadAvatar, isLoading } = useUserStore();
   const [selectedSkills, setSelectedSkills] = useState<string[]>(profile?.skills ?? []);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(profile?.preferredJobTypes ?? []);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(profile?.preferredLocations ?? []);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       fullName: profile?.fullName ?? '',
       phone: profile?.phone ?? '',
@@ -50,9 +54,27 @@ export default function EditProfileScreen() {
     },
   });
 
+  useEffect(() => {
+    if (profile) {
+      reset({
+        fullName: profile.fullName ?? '',
+        phone: profile.phone ?? '',
+        bio: profile.bio ?? '',
+        college: profile.college ?? '',
+        degree: profile.degree ?? '',
+        branch: profile.branch ?? '',
+        passingYear: profile.passingYear?.toString() ?? '',
+        cgpa: profile.cgpa?.toString() ?? '',
+      });
+      setSelectedSkills(profile.skills ?? []);
+      setSelectedTypes(profile.preferredJobTypes ?? []);
+      setSelectedLocations(profile.preferredLocations ?? []);
+    }
+  }, [profile, reset]);
+
   const handlePickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -75,9 +97,15 @@ export default function EditProfileScreen() {
       passingYear: data.passingYear ? parseInt(data.passingYear) : undefined,
       cgpa: data.cgpa ? parseFloat(data.cgpa) : undefined,
       skills: selectedSkills,
+      preferredJobTypes: selectedTypes,
+      preferredLocations: selectedLocations,
     });
-    if (result.success) router.back();
-    else Alert.alert('Error', result.error);
+    if (result.success) {
+      if (router.canGoBack()) router.back();
+      else router.replace('/(student)/(tabs)/profile');
+    } else {
+      Alert.alert('Error', result.error);
+    }
   };
 
   const toggleSkill = (skill: string) => {
@@ -86,10 +114,22 @@ export default function EditProfileScreen() {
     );
   };
 
+  const toggleType = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((s) => s !== type) : [...prev, type]
+    );
+  };
+
+  const toggleLocation = (loc: string) => {
+    setSelectedLocations((prev) =>
+      prev.includes(loc) ? prev.filter((s) => s !== loc) : [...prev, loc]
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(student)/(tabs)/profile')}>
           <ChevronLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
@@ -164,7 +204,28 @@ export default function EditProfileScreen() {
           </View>
         </Animated.View>
 
-        <Button label="Save Changes" variant="primary" size="lg" fullWidth loading={isLoading} onPress={handleSubmit(onSubmit)} style={{ marginTop: 24 }} />
+        {/* Preferences */}
+        <Animated.View entering={FadeInDown.delay(300).springify()}>
+          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, marginTop: 12 }]}>
+            PREFERRED JOB TYPES ({selectedTypes.length} selected)
+          </Text>
+          <View style={styles.skillsGrid}>
+            {JOB_TYPES.map((type) => (
+              <Chip key={type} label={type} selected={selectedTypes.includes(type)} onPress={() => toggleType(type)} />
+            ))}
+          </View>
+
+          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, marginTop: 24 }]}>
+            PREFERRED LOCATIONS ({selectedLocations.length} selected)
+          </Text>
+          <View style={styles.skillsGrid}>
+            {LOCATIONS.map((loc) => (
+              <Chip key={loc} label={loc} selected={selectedLocations.includes(loc)} onPress={() => toggleLocation(loc)} />
+            ))}
+          </View>
+        </Animated.View>
+
+        <Button label="Save Changes" variant="primary" size="lg" fullWidth loading={isLoading} onPress={handleSubmit(onSubmit)} style={{ marginTop: 32 }} />
 
         <View style={{ height: 60 }} />
       </ScrollView>

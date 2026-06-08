@@ -3,46 +3,43 @@
     "name": "FresherX",
     "slug": "fresherx",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "fresherx",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#12121A"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fresherx.app"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#12121A"
       },
       "package": "com.fresherx.app"
     },
     "web": {
-      "bundler": "metro",
-      "favicon": "./assets/images/favicon.png"
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
       "expo-font",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#12121A"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "FresherX needs access to your photos to upload your avatar and resume."
         }
-      ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/notification-icon.png",
-          "color": "#6C63FF"
-        }
       ]
-    ],
+    ]
   }
 }

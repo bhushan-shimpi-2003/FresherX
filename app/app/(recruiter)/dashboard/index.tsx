@@ -1,7 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
-} from 'react-native';
+  View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';

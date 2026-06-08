@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme';
 import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 

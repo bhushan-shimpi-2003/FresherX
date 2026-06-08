@@ -5,14 +5,14 @@ export function calculateProfileCompleteness(profile: Partial<StudentProfile> | 
   
   let score = 0;
 
-  // Avatar: 10%
+  // Avatar: 20%
   if (profile.avatar && profile.avatar.trim() !== '') {
-    score += 10;
+    score += 20;
   }
 
-  // Bio: 10%
+  // Bio: 20%
   if (profile.bio && profile.bio.trim().length > 10) {
-    score += 10;
+    score += 20;
   }
 
   // Education: 20% (requires college, degree, and passing year)
@@ -20,11 +20,6 @@ export function calculateProfileCompleteness(profile: Partial<StudentProfile> | 
     score += 20;
   } else if (profile.college || profile.degree) {
     score += 10; // Partial points
-  }
-
-  // Resume: 20%
-  if (profile.resumeUrl && profile.resumeUrl.trim() !== '') {
-    score += 20;
   }
 
   // Skills: 20% (requires at least 1 skill)
@@ -40,5 +35,5 @@ export function calculateProfileCompleteness(profile: Partial<StudentProfile> | 
     score += 20;
   }
 
-  return score;
+  return Math.min(score, 100);
 }

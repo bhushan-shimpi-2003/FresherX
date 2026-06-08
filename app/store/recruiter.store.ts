@@ -44,9 +44,29 @@ export const useRecruiterStore = create<RecruiterStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await recruiterApi.fetchProfile();
+      
+      const mappedProfile: RecruiterProfile = {
+        id: data.id,
+        userId: data.user_id,
+        fullName: data.full_name,
+        email: data.email,
+        avatar: data.avatar,
+        phone: data.phone,
+        designation: data.designation,
+        posterType: data.poster_type,
+        companyId: data.company_id,
+        company: data.company,
+        status: data.status,
+        verificationNote: data.verification_note,
+        verifiedAt: data.verified_at,
+        onboardingComplete: data.onboarding_complete,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+
       set({
-        profile: data as RecruiterProfile,
-        company: (data as any)?.company ?? null,
+        profile: mappedProfile,
+        company: data.company ?? null,
         isLoading: false,
       });
     } catch (err: any) {

@@ -1,7 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useCallback, useState } from 'react';
 import {
-  View, Text, FlatList, RefreshControl, StyleSheet, SafeAreaView,
-} from 'react-native';
+  View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Bell, Sliders } from 'lucide-react-native';
 import { useRouter } from 'expo-router';

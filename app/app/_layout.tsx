@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   useFonts,
   Inter_400Regular,
@@ -14,7 +15,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider } from '../theme';
 import { useAuthStore } from '../store/auth.store';
 import { useSettingsStore } from '../store/settings.store';
-import { usePushNotifications } from '../hooks/usePushNotifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,9 +25,6 @@ export default function RootLayout() {
   const segments = useSegments();
   const pathname = usePathname();
   
-  // Initialize push notifications system
-  usePushNotifications();
-
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -68,17 +65,19 @@ export default function RootLayout() {
   const themeOverride = themeMode === 'system' ? null : themeMode;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider override={themeOverride}>
-        <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
-        <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(student)" />
-          <Stack.Screen name="(recruiter)" />
-          <Stack.Screen name="(admin)" />
-        </Stack>
-      </ThemeProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider override={themeOverride}>
+          <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
+          <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(student)" />
+            <Stack.Screen name="(recruiter)" />
+            <Stack.Screen name="(admin)" />
+          </Stack>
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }

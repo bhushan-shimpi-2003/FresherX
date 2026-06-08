@@ -1,7 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, SafeAreaView, TouchableOpacity, StyleSheet,
-} from 'react-native';
+  View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, BookmarkX } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';

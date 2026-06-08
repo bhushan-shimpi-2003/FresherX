@@ -1,7 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, FlatList, SafeAreaView, TouchableOpacity, StyleSheet,
-} from 'react-native';
+  View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SlidersHorizontal } from 'lucide-react-native';
 import { useTheme } from '../../../../theme';

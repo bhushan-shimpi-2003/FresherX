@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { StudentProfile, UpdateStudentPayload } from '../types/user.types';
 import { supabase } from '../lib/supabase/client';
+import { profileApi } from '../services/api/profile.api';
 
 interface UserStore {
   profile: StudentProfile | null;
@@ -27,14 +28,8 @@ export const useUserStore = create<UserStore>((set, get) => ({
   fetchProfile: async (userId) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from('student_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) throw error;
-      set({ profile: data as StudentProfile, isLoading: false });
+      const data = await profileApi.fetchProfile(userId);
+      set({ profile: data, isLoading: false });
     } catch (err: any) {
       set({ error: err?.message, isLoading: false });
     }
@@ -43,15 +38,8 @@ export const useUserStore = create<UserStore>((set, get) => ({
   updateProfile: async (userId, payload) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from('student_profiles')
-        .update({ ...payload, updated_at: new Date().toISOString() })
-        .eq('user_id', userId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      set({ profile: data as StudentProfile, isLoading: false });
+      const data = await profileApi.updateProfile(userId, payload);
+      set({ profile: data, isLoading: false });
       return { success: true };
     } catch (err: any) {
       set({ error: err?.message, isLoading: false });

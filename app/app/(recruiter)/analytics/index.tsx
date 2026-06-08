@@ -1,6 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, SafeAreaView, Dimensions
+  View, Text, ScrollView, StyleSheet, Dimensions
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BarChart2, Eye, Users, TrendingUp } from 'lucide-react-native';

@@ -1,91 +1,75 @@
-import React, { useEffect, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert, Platform
 } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
-  Edit3, FileText, Settings, ChevronRight, GraduationCap,
-  Briefcase, MapPin, Mail, Phone, Star,
+  Edit3, GraduationCap,
+  Briefcase, Mail, Phone, Moon, Sun, Bell, Globe, Shield, LogOut, ChevronRight
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../../theme';
 import { useAuthStore } from '../../../../store/auth.store';
 import { useUserStore } from '../../../../store/user.store';
+import { useSettingsStore } from '../../../../store/settings.store';
 import { Avatar } from '../../../../components/ui/Avatar';
 import { Badge } from '../../../../components/ui/Badge';
 import { Button } from '../../../../components/ui/Button';
 import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
-import { palette } from '../../../../constants/colors';
 import { calculateProfileCompleteness } from '../../../../utils/profileScorer';
 
 export default function StudentProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { profile, fetchProfile, updateProfile } = useUserStore();
-  const [uploading, setUploading] = useState(false);
+  const { user, logout } = useAuthStore();
+  const { profile, fetchProfile } = useUserStore();
+  const { themeMode, notificationsEnabled, setThemeMode, setNotificationsEnabled } = useSettingsStore();
 
   useEffect(() => {
     if (user) fetchProfile(user.id);
   }, [user]);
 
-  const handleUploadResume = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
-        copyToCacheDirectory: true,
-      });
-
-      if (result.canceled || !result.assets || result.assets.length === 0) {
-        return;
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to log out?')) {
+        logout();
       }
-
-      setUploading(true);
-      const file = result.assets[0];
-
-      // In a real implementation, upload to Supabase Storage via backend.
-      // Simulating the update for now:
-      if (user) {
-        await updateProfile(user.id, {
-          resumeUrl: `https://dummy.url/${file.name}`,
-          resumeName: file.name,
-        });
-      }
-    } catch (error) {
-      console.error('Resume upload failed:', error);
-    } finally {
-      setUploading(false);
+    } else {
+      Alert.alert('Log out', 'Are you sure you want to log out?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log out', style: 'destructive', onPress: logout },
+      ]);
     }
   };
+
+  const isDark = themeMode === 'dark';
 
   const completionPct = calculateProfileCompleteness(profile);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Header gradient */}
-        <LinearGradient
-          colors={[theme.colors.primary + '30', 'transparent']}
-          style={styles.headerGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <LinearGradient
+            colors={[theme.colors.primary + '20', theme.colors.primary + '05', 'transparent']}
+            style={{ height: 400 }}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+        </View>
 
         <ScreenHeader
           title="Profile"
           subtitle="Manage your account"
-          rightAction={
-            <TouchableOpacity onPress={() => router.push('/(student)/settings')}>
-              <Settings size={22} color={theme.colors.text} />
-            </TouchableOpacity>
-          }
         />
 
         {/* Profile card */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={[styles.profileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-          <Avatar uri={profile?.avatar} name={profile?.fullName ?? user?.email} size={72} />
+          <View style={[styles.avatarWrap, { backgroundColor: theme.colors.card }]}>
+            <Avatar uri={profile?.avatar} name={profile?.fullName ?? user?.email} size={84} />
+          </View>
           <Text style={[styles.name, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
             {profile?.fullName ?? 'Your Name'}
           </Text>
@@ -148,41 +132,72 @@ export default function StudentProfileScreen() {
           </Animated.View>
         )}
 
-        {/* Resume */}
-        <Animated.View entering={FadeInDown.delay(250).springify()} style={[styles.section, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-          <TouchableOpacity onPress={handleUploadResume} disabled={uploading}>
-            <View style={styles.sectionRow}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
-                Resume
-              </Text>
-              {uploading ? (
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-              ) : (
-                <ChevronRight size={16} color={theme.colors.textMuted} />
-              )}
-            </View>
-            {profile?.resumeUrl ? (
-              <View>
-                <View style={[styles.resumeItem, { backgroundColor: theme.colors.primary + '12', borderColor: theme.colors.primary + '25', marginTop: 12 }]}>
-                  <FileText size={18} color={theme.colors.primary} />
-                  <Text style={[styles.resumeName, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium }]} numberOfLines={1}>
-                    {profile.resumeName ?? 'resume.pdf'}
-                  </Text>
-                </View>
-                <Button 
-                  label="Analyze Resume with AI" 
-                  variant="outline" 
-                  size="sm" 
-                  leftIcon={<Star size={15} color={theme.colors.primary} />}
-                  onPress={() => alert('AI Review triggered!')}
-                  style={{ marginTop: 12 }}
-                />
+        {/* Appearance Settings */}
+        <Animated.View entering={FadeInDown.delay(250).springify()} style={styles.group}>
+          <Text style={[styles.groupLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }]}>
+            APPEARANCE
+          </Text>
+          <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+            <View style={styles.settingRow}>
+              <View style={[styles.iconWrap, { backgroundColor: theme.colors.primary + '20' }]}>
+                {isDark ? <Moon size={18} color={theme.colors.primary} /> : <Sun size={18} color={theme.colors.primary} />}
               </View>
-            ) : (
-              <Text style={[styles.emptyResume, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular, marginTop: 12 }]}>
-                Tap here to upload a PDF resume
-              </Text>
-            )}
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium }]}>
+                  Dark Mode
+                </Text>
+                <Text style={[styles.settingHint, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
+                  {isDark ? 'Currently using dark theme' : 'Currently using light theme'}
+                </Text>
+              </View>
+              <Switch
+                value={isDark}
+                onValueChange={(val) => setThemeMode(val ? 'dark' : 'light')}
+                trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
+                thumbColor={isDark ? theme.colors.primary : theme.colors.card}
+              />
+            </View>
+          </View>
+        </Animated.View>
+
+
+        {/* Account */}
+        <Animated.View entering={FadeInDown.delay(350).springify()} style={styles.group}>
+          <Text style={[styles.groupLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }]}>
+            ACCOUNT
+          </Text>
+          <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+            {[
+              { Icon: Shield, label: 'Privacy Policy', color: theme.colors.info },
+              { Icon: Globe, label: 'Language', color: theme.colors.accent },
+            ].map(({ Icon, label, color }, i) => (
+              <React.Fragment key={label}>
+                <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+                  <View style={[styles.iconWrap, { backgroundColor: color + '20' }]}>
+                    <Icon size={18} color={color} />
+                  </View>
+                  <Text style={[styles.settingLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium, flex: 1 }]}>
+                    {label}
+                  </Text>
+                  <ChevronRight size={16} color={theme.colors.textMuted} />
+                </TouchableOpacity>
+                {i < 1 && <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />}
+              </React.Fragment>
+            ))}
+          </View>
+        </Animated.View>
+
+        {/* Logout */}
+        <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.group}>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={[styles.logoutBtn, { backgroundColor: theme.colors.errorBg, borderColor: theme.colors.error + '30' }]}
+            activeOpacity={0.8}
+          >
+            <LogOut size={18} color={theme.colors.error} />
+            <Text style={[styles.logoutText, { color: theme.colors.error, fontFamily: theme.typography.fontFamily.semiBold }]}>
+              Log Out
+            </Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -195,26 +210,44 @@ export default function StudentProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { paddingHorizontal: 16 },
-  headerGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 200 },
+  avatarWrap: { padding: 4, borderRadius: 50, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 4 },
   profileCard: {
-    alignItems: 'center', padding: 24, borderRadius: 20, borderWidth: 1, marginBottom: 12, gap: 10,
+    alignItems: 'center', padding: 24, borderRadius: 24, borderWidth: 1, marginBottom: 16, gap: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.05, shadowRadius: 16, elevation: 2
   },
-  name: { fontSize: 20, letterSpacing: -0.3 },
+  name: { fontSize: 22, letterSpacing: -0.3, marginTop: 4 },
   email: { fontSize: 14 },
   completionArea: { width: '100%', gap: 8 },
   completionRow: { flexDirection: 'row', justifyContent: 'space-between' },
   completionLabel: { fontSize: 12 },
   completionPct: { fontSize: 12 },
-  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: 6, borderRadius: 3 },
-  infoSection: { padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 12, gap: 14 },
+  progressTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: 8, borderRadius: 4 },
+  infoSection: { 
+    padding: 20, borderRadius: 24, borderWidth: 1, marginBottom: 16, gap: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1
+  },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  infoText: { fontSize: 14, flex: 1 },
-  section: { padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 12, gap: 12 },
+  infoText: { fontSize: 15, flex: 1 },
+  section: { 
+    padding: 20, borderRadius: 24, borderWidth: 1, marginBottom: 16, gap: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1
+  },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: 16 },
+  sectionTitle: { fontSize: 18, letterSpacing: -0.3 },
   skills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  resumeItem: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, borderWidth: 1 },
-  resumeName: { fontSize: 14, flex: 1 },
-  emptyResume: { fontSize: 14 },
+  group: { marginBottom: 24 },
+  groupLabel: { fontSize: 12, letterSpacing: 0.5, marginLeft: 8, marginBottom: 8 },
+  settingsCard: { 
+    borderRadius: 24, borderWidth: 1, overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1
+  },
+  settingRow: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+  iconWrap: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  settingInfo: { flex: 1 },
+  settingLabel: { fontSize: 16, marginBottom: 2 },
+  settingHint: { fontSize: 13 },
+  divider: { height: 1, marginLeft: 66 },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 20, borderWidth: 1, gap: 8 },
+  logoutText: { fontSize: 16 },
 });

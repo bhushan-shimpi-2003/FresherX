@@ -1,7 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
-  View, Text, FlatList, SafeAreaView, TouchableOpacity, StyleSheet,
-} from 'react-native';
+  View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../../../theme';
 import { useAuthStore } from '../../../../store/auth.store';
 import { useNotificationsStore } from '../../../../store/notifications.store';

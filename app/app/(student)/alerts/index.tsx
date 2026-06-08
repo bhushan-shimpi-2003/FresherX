@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../theme';
 import { ChevronLeft, Bell, Plus, Trash2 } from 'lucide-react-native';

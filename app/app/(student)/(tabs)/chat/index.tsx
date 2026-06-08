@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../../theme';
 import { MessageSquare } from 'lucide-react-native';
 import { EmptyState } from '../../../../components/ui/EmptyState';

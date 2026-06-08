@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Check, X, ShieldAlert, ChevronLeft, Building2, Search, Filter, Briefcase, MapPin, DollarSign, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
