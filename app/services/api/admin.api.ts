@@ -1,9 +1,19 @@
 import api from '../axios';
-import type { AdminDashboardStats, PendingRecruiter, AdminJob, AdminUser, Report, AdminAnalytics } from '../../types/admin.types';
+import type { AdminDashboardStats, PendingRecruiter, AdminJob, AdminUser, Report, AdminAnalytics, AdminActivity } from '../../types/admin.types';
 
 export const adminApi = {
   fetchStats: async (): Promise<AdminDashboardStats> => {
     const { data } = await api.get('/admin/stats');
+    return data;
+  },
+
+  fetchAnalytics: async (): Promise<AdminAnalytics> => {
+    const { data } = await api.get('/admin/analytics');
+    return data;
+  },
+
+  fetchActivities: async (): Promise<AdminActivity[]> => {
+    const { data } = await api.get('/admin/activities');
     return data;
   },
 

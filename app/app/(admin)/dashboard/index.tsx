@@ -20,13 +20,17 @@ export default function AdminDashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const { stats, isLoading, fetchDashboardStats } = useAdminStore();
+  const { stats, activities, isLoading, fetchDashboardStats, fetchActivities } = useAdminStore();
 
-  useEffect(() => { fetchDashboardStats(); }, []);
+  useEffect(() => { 
+    fetchDashboardStats();
+    fetchActivities();
+  }, []);
 
   if (isLoading && !stats) return <Loader fullScreen />;
 
   const quickActions = [
+    { label: 'Manage Users', value: stats?.totalStudents ?? 0, route: '/(admin)/users', Icon: Users, color: theme.colors.textSecondary, urgent: false },
     { label: 'Verify Recruiters', value: stats?.pendingRecruiters ?? 0, route: '/(admin)/verify', Icon: Shield, color: theme.colors.primary, urgent: (stats?.pendingRecruiters ?? 0) > 0 },
     { label: 'Review Jobs', value: stats?.pendingJobs ?? 0, route: '/(admin)/jobs', Icon: Briefcase, color: theme.colors.warning, urgent: (stats?.pendingJobs ?? 0) > 0 },
     { label: 'Reports', value: stats?.totalReports ?? 0, route: '/(admin)/reports', Icon: AlertTriangle, color: theme.colors.error, urgent: (stats?.totalReports ?? 0) > 0 },
@@ -38,12 +42,14 @@ export default function AdminDashboardScreen() {
     { label: 'Total Jobs', value: stats?.totalJobs ?? 0, Icon: Briefcase, color: theme.colors.accent, trend: '+24% this month' },
   ];
 
-  // Mock activity feed
-  const activities = [
-    { id: 1, title: 'New recruiter signup', time: new Date(Date.now() - 1000 * 60 * 30).toISOString(), icon: Shield, color: theme.colors.secondary },
-    { id: 2, title: 'Job post flagged', time: new Date(Date.now() - 1000 * 60 * 120).toISOString(), icon: AlertTriangle, color: theme.colors.error },
-    { id: 3, title: 'Student reached 1k views', time: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), icon: Star, color: theme.colors.primary },
-  ];
+  const getIconForActivity = (type: string) => {
+    switch (type) {
+      case 'user': return { icon: Users, color: theme.colors.secondary };
+      case 'job': return { icon: Briefcase, color: theme.colors.primary };
+      case 'report': return { icon: AlertTriangle, color: theme.colors.error };
+      default: return { icon: Activity, color: theme.colors.textSecondary };
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
@@ -141,21 +147,29 @@ export default function AdminDashboardScreen() {
             <Activity size={18} color={theme.colors.primary} />
           </View>
           <View style={[styles.activityCard, { backgroundColor: theme.colors.card + '90', borderColor: theme.colors.border }]}>
-            {activities.map((act, index) => (
-              <View key={act.id} style={[styles.activityRow, index < activities.length - 1 && { borderBottomWidth: 1, borderBottomColor: theme.colors.border }]}>
-                <View style={[styles.activityIconWrap, { backgroundColor: act.color + '15' }]}>
-                  <act.icon size={16} color={act.color} />
+            {activities?.slice(0, 5).map((act, index) => {
+              const { icon: ActIcon, color } = getIconForActivity(act.type);
+              return (
+                <View key={act.id} style={[styles.activityRow, index < Math.min(activities.length, 5) - 1 && { borderBottomWidth: 1, borderBottomColor: theme.colors.border }]}>
+                  <View style={[styles.activityIconWrap, { backgroundColor: color + '15' }]}>
+                    <ActIcon size={16} color={color} />
+                  </View>
+                  <View style={styles.activityInfo}>
+                    <Text style={[styles.activityTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium }]}>
+                      {act.title}
+                    </Text>
+                    <Text style={[styles.activityTime, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
+                      {formatRelativeTime(act.time)}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.activityInfo}>
-                  <Text style={[styles.activityTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium }]}>
-                    {act.title}
-                  </Text>
-                  <Text style={[styles.activityTime, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
-                    {formatRelativeTime(act.time)}
-                  </Text>
-                </View>
+              );
+            })}
+            {activities?.length === 0 && (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={{ color: theme.colors.textMuted }}>No recent activities</Text>
               </View>
-            ))}
+            )}
           </View>
         </Animated.View>
 

@@ -66,6 +66,13 @@ export interface Report {
   createdAt: string;
 }
 
+export interface AdminActivity {
+  id: string;
+  title: string;
+  time: string;
+  type: 'user' | 'job' | 'report';
+}
+
 export interface AdminAnalytics {
   growthData: { date: string; students: number; recruiters: number; jobs: number }[];
   topSkills: { skill: string; count: number }[];

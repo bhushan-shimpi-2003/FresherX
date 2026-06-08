@@ -4,6 +4,7 @@ import {
   AdminDashboardStats, PendingRecruiter, AdminJob,
   AdminUser, Report, AdminAnalytics,
   VerifyRecruiterPayload, ReviewJobPayload,
+  AdminActivity,
 } from '../types/admin.types';
 
 interface AdminStore {
@@ -12,11 +13,13 @@ interface AdminStore {
   pendingJobs: AdminJob[];
   users: AdminUser[];
   reports: Report[];
+  activities: AdminActivity[];
   analytics: AdminAnalytics | null;
   isLoading: boolean;
   error: string | null;
 
   fetchDashboardStats: () => Promise<void>;
+  fetchActivities: () => Promise<void>;
   fetchPendingRecruiters: () => Promise<void>;
   verifyRecruiter: (payload: VerifyRecruiterPayload) => Promise<{ success: boolean; error?: string }>;
   fetchPendingJobs: () => Promise<void>;
@@ -35,17 +38,28 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   pendingJobs: [],
   users: [],
   reports: [],
+  activities: [],
   analytics: null,
   isLoading: false,
   error: null,
 
-  reset: () => set({ stats: null, pendingRecruiters: [], pendingJobs: [], users: [], reports: [] }),
+  reset: () => set({ stats: null, pendingRecruiters: [], pendingJobs: [], users: [], reports: [], activities: [] }),
 
   fetchDashboardStats: async () => {
     set({ isLoading: true });
     try {
       const stats = await adminApi.fetchStats();
       set({ stats, isLoading: false });
+    } catch (err: any) {
+      set({ error: err?.message, isLoading: false });
+    }
+  },
+
+  fetchActivities: async () => {
+    set({ isLoading: true });
+    try {
+      const activities = await adminApi.fetchActivities();
+      set({ activities, isLoading: false });
     } catch (err: any) {
       set({ error: err?.message, isLoading: false });
     }

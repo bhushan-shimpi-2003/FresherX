@@ -181,4 +181,31 @@ router.post('/reports/:id/resolve', async (req, res) => {
   }
 });
 
+router.get('/activities', async (req, res) => {
+  try {
+    const [profilesData, jobsData, reportsData] = await Promise.all([
+      supabaseAdmin.from('profiles').select('id, full_name, role, created_at').order('created_at', { ascending: false }).limit(5),
+      supabaseAdmin.from('jobs').select('id, title, created_at').order('created_at', { ascending: false }).limit(5),
+      supabaseAdmin.from('reports').select('id, type, created_at').order('created_at', { ascending: false }).limit(5),
+    ]);
+
+    const activities: any[] = [];
+    if (profilesData.data) {
+      profilesData.data.forEach(p => activities.push({ id: `p-${p.id}`, title: `New ${p.role} signed up: ${p.full_name || 'Unknown'}`, time: p.created_at, type: 'user' }));
+    }
+    if (jobsData.data) {
+      jobsData.data.forEach(j => activities.push({ id: `j-${j.id}`, title: `New job posted: ${j.title}`, time: j.created_at, type: 'job' }));
+    }
+    if (reportsData.data) {
+      reportsData.data.forEach(r => activities.push({ id: `r-${r.id}`, title: `New report submitted: ${r.type}`, time: r.created_at, type: 'report' }));
+    }
+
+    activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    
+    res.json(activities.slice(0, 10));
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
