@@ -12,7 +12,6 @@ interface AdminStore {
   pendingRecruiters: PendingRecruiter[];
   pendingJobs: AdminJob[];
   users: AdminUser[];
-  reports: Report[];
   activities: AdminActivity[];
   analytics: AdminAnalytics | null;
   isLoading: boolean;
@@ -24,11 +23,11 @@ interface AdminStore {
   verifyRecruiter: (payload: VerifyRecruiterPayload) => Promise<{ success: boolean; error?: string }>;
   fetchPendingJobs: () => Promise<void>;
   reviewJob: (payload: ReviewJobPayload) => Promise<{ success: boolean; error?: string }>;
+  updateJob: (jobId: string, payload: any) => Promise<{ success: boolean; error?: string }>;
+  deleteJob: (jobId: string) => Promise<{ success: boolean; error?: string }>;
   fetchUsers: () => Promise<void>;
   updateUserStatus: (userId: string, action: 'suspend' | 'activate') => Promise<{ success: boolean; error?: string }>;
   toggleAutoVerify: (userId: string, autoVerified: boolean) => Promise<{ success: boolean; error?: string }>;
-  fetchReports: () => Promise<void>;
-  resolveReport: (reportId: string, action: 'resolve' | 'dismiss' | 'open') => Promise<{ success: boolean; error?: string }>;
   fetchAnalytics: () => Promise<void>;
   reset: () => void;
 }
@@ -38,13 +37,12 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   pendingRecruiters: [],
   pendingJobs: [],
   users: [],
-  reports: [],
   activities: [],
   analytics: null,
   isLoading: false,
   error: null,
 
-  reset: () => set({ stats: null, pendingRecruiters: [], pendingJobs: [], users: [], reports: [], activities: [] }),
+  reset: () => set({ stats: null, pendingRecruiters: [], pendingJobs: [], users: [], activities: [] }),
 
   fetchDashboardStats: async () => {
     set({ isLoading: true });
@@ -114,6 +112,32 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     }
   },
 
+  updateJob: async (jobId: string, payload: any) => {
+    try {
+      await adminApi.updateJob(jobId, payload);
+      set((state) => ({
+        pendingJobs: state.pendingJobs.map((j) =>
+          j.id === jobId ? { ...j, ...payload } : j
+        ),
+      }));
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message };
+    }
+  },
+
+  deleteJob: async (jobId: string) => {
+    try {
+      await adminApi.deleteJob(jobId);
+      set((state) => ({
+        pendingJobs: state.pendingJobs.filter((j) => j.id !== jobId),
+      }));
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message };
+    }
+  },
+
   fetchUsers: async () => {
     set({ isLoading: true });
     try {
@@ -148,39 +172,13 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     }
   },
 
-  fetchReports: async () => {
+  fetchAnalytics: async () => {
     set({ isLoading: true });
     try {
-      const reports = await adminApi.fetchReports();
-      set({ reports, isLoading: false });
+      const analytics = await adminApi.fetchAnalytics();
+      set({ analytics, isLoading: false });
     } catch (err: any) {
       set({ error: err?.message, isLoading: false });
     }
-  },
-
-  resolveReport: async (reportId, action) => {
-    try {
-      await adminApi.resolveReport(reportId, action);
-      set((state) => ({
-        reports: state.reports.map((r) =>
-          r.id === reportId ? { ...r, status: action === 'resolve' ? 'resolved' : action === 'dismiss' ? 'dismissed' : 'open' } : r
-        ),
-      }));
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err?.message };
-    }
-  },
-
-  fetchAnalytics: async () => {
-    // Placeholder — in production this would call an edge function or RPC
-    set({
-      analytics: {
-        growthData: [],
-        topSkills: [],
-        topCompanies: [],
-        applicationStats: [],
-      },
-    });
   },
 }));

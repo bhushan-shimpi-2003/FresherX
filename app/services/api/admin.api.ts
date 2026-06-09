@@ -52,9 +52,18 @@ export const adminApi = {
     return data;
   },
 
+  deleteJob: async (jobId: string) => {
+    await api.delete(`/admin/jobs/${jobId}`);
+  },
+
   fetchUsers: async (page = 0): Promise<AdminUser[]> => {
     const { data } = await api.get('/admin/users', { params: { page } });
-    return data;
+    return data.map((user: any) => ({
+      ...user,
+      fullName: user.full_name,
+      createdAt: user.created_at,
+      lastSeen: user.last_seen,
+    }));
   },
 
   updateUserStatus: async (userId: string, action: 'suspend' | 'activate') => {

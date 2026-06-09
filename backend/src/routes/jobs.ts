@@ -143,7 +143,7 @@ router.post('/:id/apply', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     // Since we don't have an RPC yet, fetch and increment
-    const { data: job } = await supabaseAdmin.from('jobs').select('applications').eq('id', id).single();
+    const { data: job } = await supabaseAdmin.from('jobs').select('title, applications, recruiter_id').eq('id', id).single();
     const newCount = (job?.applications || 0) + 1;
     
     const { error } = await supabaseAdmin.from('jobs').update({ applications: newCount }).eq('id', id);
@@ -155,6 +155,17 @@ router.post('/:id/apply', requireAuth, async (req, res) => {
         user_id: req.user.id,
         job_id: id
       });
+    }
+
+    // Notify recruiter
+    if (job?.recruiter_id) {
+      await supabaseAdmin.from('notifications').insert([{
+        user_id: job.recruiter_id,
+        title: 'New Job Application',
+        body: `A new candidate applied to your job: ${job.title}`,
+        type: 'application',
+        data: { job_id: id }
+      }]);
     }
     
     res.json({ success: true, applications: newCount });

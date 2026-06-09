@@ -104,9 +104,23 @@ export const useRecruiterStore = create<RecruiterStore>((set, get) => ({
         referralAvailable: j.referral_available !== undefined ? j.referral_available : j.referralAvailable,
         referralSlots: j.referral_slots !== undefined ? j.referral_slots : j.referralSlots,
       })) as Job[];
+      const activeJobs = allJobs.filter((j) => j.status !== 'draft');
+      const draftJobs = allJobs.filter((j) => j.status === 'draft');
+
+      const analytics = activeJobs.map((job) => ({
+        jobId: job.id,
+        title: job.title,
+        views: job.views ?? 0,
+        applications: job.applications ?? 0,
+        saves: (job as any).saves ?? 0,
+        conversionRate: job.views ? ((job.applications ?? 0) / job.views) * 100 : 0,
+        dailyViews: []
+      }));
+
       set({
-        jobs: allJobs.filter((j) => j.status !== 'draft'),
-        draftJobs: allJobs.filter((j) => j.status === 'draft'),
+        jobs: activeJobs,
+        draftJobs: draftJobs,
+        analytics,
         isLoading: false,
       });
     } catch (err: any) {

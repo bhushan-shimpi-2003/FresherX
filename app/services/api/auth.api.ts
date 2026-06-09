@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase/client';
 import type { UserRole } from '../../constants/config';
+import api from '../axios';
 
 export const authApi = {
   /**
@@ -55,6 +56,14 @@ export const authApi = {
   updatePassword: async (password: string) => {
     const { data, error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Change password for logged-in user (requires current password)
+   */
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const { data } = await api.put('/auth/update-password', { currentPassword, newPassword });
     return data;
   },
 

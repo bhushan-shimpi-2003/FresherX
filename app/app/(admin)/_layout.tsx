@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { LayoutDashboard, Shield, Briefcase, Users, AlertTriangle, BarChart2 } from 'lucide-react-native';
+import { LayoutDashboard, Shield, Briefcase, Users, Settings as SettingsIcon } from 'lucide-react-native';
 import { useTheme } from '../../theme';
 
 export default function AdminTabsLayout() {
@@ -35,6 +35,15 @@ export default function AdminTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="jobs/index"
+        options={{
+          title: 'Review Jobs',
+          tabBarIcon: ({ color, focused }) => (
+            <Briefcase size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="verify/index"
         options={{
           title: 'Verify',
@@ -43,15 +52,7 @@ export default function AdminTabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="jobs/index"
-        options={{
-          title: 'Jobs',
-          tabBarIcon: ({ color, focused }) => (
-            <Briefcase size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="users/index"
         options={{
@@ -62,17 +63,18 @@ export default function AdminTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="reports/index"
+        name="settings/index"
         options={{
-          title: 'Reports',
+          title: 'Settings',
           tabBarIcon: ({ color, focused }) => (
-            <AlertTriangle size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+            <SettingsIcon size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
           ),
         }}
       />
       {/* Hidden screens */}
       <Tabs.Screen name="analytics/index" options={{ href: null }} />
       <Tabs.Screen name="create/index" options={{ href: null }} />
+      <Tabs.Screen name="jobs/edit/[id]" options={{ href: null }} />
     </Tabs>
   );
 }
