@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SlidersHorizontal, X } from 'lucide-react-native';
+import { SlidersHorizontal, X, Bookmark } from 'lucide-react-native';
 import { useTheme } from '../../../../theme';
 import { useJobsStore } from '../../../../store/jobs.store';
 import { useAuthStore } from '../../../../store/auth.store';
@@ -78,7 +78,18 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-      <ScreenHeader title="Jobs" subtitle="Discover new opportunities" />
+      <ScreenHeader 
+        title="Jobs" 
+        subtitle="Discover new opportunities" 
+        rightAction={
+          <TouchableOpacity 
+            onPress={() => router.push('/(student)/(tabs)/saved')} 
+            style={{ padding: 8, backgroundColor: theme.colors.card, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border }}
+          >
+            <Bookmark size={20} color={theme.colors.text} />
+          </TouchableOpacity>
+        }
+      />
       {/* Search bar */}
       <View style={styles.topArea}>
         <SearchBar

@@ -3,7 +3,7 @@ import React, { useEffect, useCallback, useState } from 'react';
 import {
   View, Text, FlatList, RefreshControl, StyleSheet, Modal } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Bell, Sliders, X, UserCheck, Bookmark as BookmarkIcon, BellRing } from 'lucide-react-native';
+import { Bell, Sliders, X, UserCheck, Bookmark as BookmarkIcon, BellRing, FileText } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../../theme';
 import { useAuthStore } from '../../../../store/auth.store';
@@ -118,20 +118,7 @@ export default function StudentHomeScreen() {
 
       {/* KPI Cards */}
       <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 28, gap: 12 }}>
-        <TouchableOpacity 
-          style={{ flex: 1, backgroundColor: theme.colors.primary + '15', padding: 16, borderRadius: 20 }}
-          onPress={() => router.push('/(student)/profile')}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <UserCheck size={20} color={theme.colors.primary} />
-            <Text style={{ fontSize: 22, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.primary }}>
-              {calculateProfileCompleteness(profile)}%
-            </Text>
-          </View>
-          <Text style={{ fontSize: 13, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
-            Profile Score
-          </Text>
-        </TouchableOpacity>
+
         
         <TouchableOpacity 
           style={{ flex: 1, backgroundColor: theme.colors.accent + '15', padding: 16, borderRadius: 20 }}
@@ -163,6 +150,24 @@ export default function StudentHomeScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Resume Builder Banner */}
+      <TouchableOpacity 
+        style={{ marginHorizontal: 16, marginBottom: 28, backgroundColor: theme.colors.primary, borderRadius: 20, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+        onPress={() => router.push('/(student)/(tabs)/resume')}
+      >
+        <View style={{ flex: 1, paddingRight: 16 }}>
+          <Text style={{ color: '#FFF', fontSize: 18, fontFamily: theme.typography.fontFamily.bold, marginBottom: 4 }}>
+            Build your ATS Resume
+          </Text>
+          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontFamily: theme.typography.fontFamily.regular }}>
+            Create a professional, parser-friendly PDF resume in seconds.
+          </Text>
+        </View>
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: 12, borderRadius: 16 }}>
+          <FileText size={24} color="#FFF" />
+        </View>
+      </TouchableOpacity>
 
       {/* Recommended Jobs */}
       {recommendedJobs.length > 0 && (

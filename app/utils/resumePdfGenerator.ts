@@ -126,6 +126,28 @@ export const generateResumePDF = async (data: ResumeData) => {
             `).join('')}
           </div>
         ` : ''}
+
+        ${data.certifications?.length > 0 ? `
+          <h2>Certifications</h2>
+          <div class="section">
+            ${data.certifications.map(cert => `
+              <div class="item">
+                <div class="item-header">
+                  <span>${cert.name}</span>
+                  <span>${cert.year}</span>
+                </div>
+                <div class="item-subheader">
+                  <span>${cert.issuer}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${data.hobbies ? `
+          <h2>Hobbies</h2>
+          <div class="section">${data.hobbies}</div>
+        ` : ''}
       </body>
     </html>
   `;

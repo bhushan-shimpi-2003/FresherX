@@ -112,6 +112,19 @@ export default function ResumeBuilderScreen() {
           />
         </View>
 
+        {/* Hobbies */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Hobbies (Comma Separated)</Text>
+          <TextInput
+            style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, height: 80, textAlignVertical: 'top' }]}
+            placeholder="Reading, Traveling, Gaming"
+            placeholderTextColor={theme.colors.textMuted}
+            multiline
+            value={store.data.hobbies}
+            onChangeText={(t) => store.updateData({ hobbies: t })}
+          />
+        </View>
+
         {/* Experience */}
         <View style={styles.section}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -191,6 +204,32 @@ export default function ResumeBuilderScreen() {
               }} />
               <TextInput style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, height: 80, textAlignVertical: 'top' }]} placeholder="Description" placeholderTextColor={theme.colors.textMuted} multiline value={proj.description} onChangeText={(t) => {
                 const newProj = [...store.data.projects]; newProj[index].description = t; store.updateData({ projects: newProj });
+              }} />
+            </View>
+          ))}
+        </View>
+
+        {/* Certifications */}
+        <View style={styles.section}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Certifications</Text>
+            <TouchableOpacity onPress={() => store.addCertification({ id: Date.now().toString(), name: '', issuer: '', year: '' })}>
+              <Plus color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
+          {store.data.certifications?.map((cert, index) => (
+            <View key={cert.id} style={[styles.card, { borderColor: theme.colors.border }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                <TouchableOpacity onPress={() => store.removeCertification(cert.id)}><Trash2 size={16} color={theme.colors.error} /></TouchableOpacity>
+              </View>
+              <TextInput style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]} placeholder="Certification Name" placeholderTextColor={theme.colors.textMuted} value={cert.name} onChangeText={(t) => {
+                const newCerts = [...store.data.certifications]; newCerts[index].name = t; store.updateData({ certifications: newCerts });
+              }} />
+              <TextInput style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]} placeholder="Issuer (e.g. Coursera)" placeholderTextColor={theme.colors.textMuted} value={cert.issuer} onChangeText={(t) => {
+                const newCerts = [...store.data.certifications]; newCerts[index].issuer = t; store.updateData({ certifications: newCerts });
+              }} />
+              <TextInput style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]} placeholder="Year" placeholderTextColor={theme.colors.textMuted} value={cert.year} onChangeText={(t) => {
+                const newCerts = [...store.data.certifications]; newCerts[index].year = t; store.updateData({ certifications: newCerts });
               }} />
             </View>
           ))}

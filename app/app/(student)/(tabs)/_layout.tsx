@@ -61,8 +61,7 @@ export default function StudentTabsLayout() {
       <Tabs.Screen
         name="saved/index"
         options={{
-          title: 'Saved',
-          tabBarIcon: ({ color, focused }) => <TabIcon Icon={Bookmark} color={color} focused={focused} />,
+          href: null,
         }}
       />
       <Tabs.Screen

@@ -23,6 +23,13 @@ export interface ResumeProject {
   link: string;
 }
 
+export interface ResumeCertification {
+  id: string;
+  name: string;
+  issuer: string;
+  year: string;
+}
+
 export interface ResumeData {
   fullName: string;
   email: string;
@@ -32,9 +39,11 @@ export interface ResumeData {
   portfolio: string;
   summary: string;
   skills: string; // comma separated
+  hobbies: string; // comma separated
   education: ResumeEducation[];
   experience: ResumeExperience[];
   projects: ResumeProject[];
+  certifications: ResumeCertification[];
 }
 
 interface ResumeStore {
@@ -46,6 +55,8 @@ interface ResumeStore {
   removeExperience: (id: string) => void;
   addProject: (proj: ResumeProject) => void;
   removeProject: (id: string) => void;
+  addCertification: (cert: ResumeCertification) => void;
+  removeCertification: (id: string) => void;
   reset: () => void;
 }
 
@@ -58,9 +69,11 @@ const defaultData: ResumeData = {
   portfolio: '',
   summary: '',
   skills: '',
+  hobbies: '',
   education: [],
   experience: [],
   projects: [],
+  certifications: [],
 };
 
 export const useResumeStore = create<ResumeStore>((set) => ({
@@ -72,5 +85,7 @@ export const useResumeStore = create<ResumeStore>((set) => ({
   removeExperience: (id) => set((state) => ({ data: { ...state.data, experience: state.data.experience.filter(e => e.id !== id) } })),
   addProject: (proj) => set((state) => ({ data: { ...state.data, projects: [...state.data.projects, proj] } })),
   removeProject: (id) => set((state) => ({ data: { ...state.data, projects: state.data.projects.filter(p => p.id !== id) } })),
+  addCertification: (cert) => set((state) => ({ data: { ...state.data, certifications: [...state.data.certifications, cert] } })),
+  removeCertification: (id) => set((state) => ({ data: { ...state.data, certifications: state.data.certifications.filter(c => c.id !== id) } })),
   reset: () => set({ data: defaultData }),
 }));
