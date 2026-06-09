@@ -16,7 +16,7 @@ export default function RoleSelectionScreen() {
     if (selectedRole === 'student') {
       router.push('/(student)/onboarding/personal');
     } else if (selectedRole === 'recruiter') {
-      router.push('/(recruiter)/onboarding/company-setup');
+      router.push('/(recruiter)/dashboard');
     }
   };
 

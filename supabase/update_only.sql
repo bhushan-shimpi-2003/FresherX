@@ -136,7 +136,7 @@ ALTER TABLE jobs ADD CONSTRAINT check_referral_slots CHECK (referral_slots >= 0)
 -- ============================================================
 
 -- Create the ENUM type for recruiter sub-types
-CREATE TYPE poster_type AS ENUM ('HR', 'INSIDER', 'ALUMNI', 'MENTOR');
+CREATE TYPE poster_type AS ENUM ('JOB_POSTER');
 
 -- Add poster_type to profiles
 ALTER TABLE profiles ADD COLUMN poster_type poster_type;

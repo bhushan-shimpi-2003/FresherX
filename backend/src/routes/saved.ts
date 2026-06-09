@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
     const userId = req.user.id;
     const { data, error } = await supabaseAdmin
       .from('saved_jobs')
-      .select('job_id, created_at, jobs(*, company:companies(*))')
+      .select('job_id, created_at, jobs(*)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false });
 

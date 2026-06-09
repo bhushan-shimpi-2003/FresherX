@@ -7,9 +7,7 @@ export type JobStatus = 'draft' | 'pending' | 'published' | 'rejected' | 'archiv
 export interface Job {
   id: string;
   title: string;
-  companyId: string;
   recruiterId: string;
-  company: Company;
   description: string;
   requirements: string;
   skills: string[];
@@ -33,16 +31,7 @@ export interface Job {
   updatedAt: string;
 }
 
-export interface Company {
-  id: string;
-  name: string;
-  logo: string | null;
-  website: string | null;
-  industry: string | null;
-  size: string | null;
-  location: string | null;
-  description: string | null;
-}
+
 
 export interface JobFilters {
   keyword?: string;
@@ -52,7 +41,6 @@ export interface JobFilters {
   isRemote?: boolean;
   salaryMin?: number;
   skills?: string[];
-  companyId?: string;
   referralAvailable?: boolean;
 }
 
@@ -84,4 +72,5 @@ export interface CreateJobPayload {
   deadline?: string;
   referralAvailable?: boolean;
   referralSlots?: number;
+  status?: JobStatus;
 }

@@ -66,10 +66,10 @@ export default function RecruiterProfileScreen() {
         {/* Profile Header */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={[styles.profileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
           <View style={[styles.avatarWrap, { backgroundColor: theme.colors.card }]}>
-            <Avatar name={company?.name ?? profile?.fullName} size={84} />
+            <Avatar name={profile?.fullName ?? 'Recruiter'} size={84} />
           </View>
           <Text style={[styles.name, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-            {company?.name ?? 'Setup Company'}
+            {profile?.fullName ?? 'Job Poster'}
           </Text>
           <Text style={[styles.designation, { color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily.regular }]}>
             {profile?.designation ?? profile?.fullName} · {user?.email}
@@ -105,37 +105,7 @@ export default function RecruiterProfileScreen() {
           )}
         </Animated.View>
 
-        {/* Company details */}
-        {company && (
-          <Animated.View entering={FadeInDown.delay(150).springify()} style={[styles.section, { backgroundColor: theme.colors.card + '80', borderColor: theme.colors.border }]}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
-                Company Overview
-              </Text>
-            </View>
-            <View style={styles.detailsGrid}>
-              {[
-                { Icon: Building2, label: company.industry, color: '#4CAF50' },
-                { Icon: Users, label: `${company.size} employees`, color: '#2196F3' },
-                { Icon: MapPin, label: company.location, color: '#FF9800' },
-                { Icon: Globe, label: company.website ?? 'No website', color: '#9C27B0' },
-              ].map(({ Icon, label, color }) => (
-                <View key={label} style={styles.detailRow}>
-                  <View style={[styles.detailIconWrap, { backgroundColor: color + '15' }]}>
-                    <Icon size={16} color={color} />
-                  </View>
-                  <Text style={[styles.detailText, { color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily.medium }]} numberOfLines={1}>
-                    {label}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </Animated.View>
-        )}
 
-        {!company && (
-          <Button label="Setup Company Profile" variant="primary" size="lg" fullWidth onPress={() => router.push('/(recruiter)/onboarding/company-setup' as any)} />
-        )}
 
         {/* Appearance Settings */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.group}>

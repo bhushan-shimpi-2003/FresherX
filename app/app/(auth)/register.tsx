@@ -35,7 +35,7 @@ export default function RegisterScreen() {
   const { register, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
-  const [selectedPosterType, setSelectedPosterType] = useState<PosterType>('HR');
+
 
   const { control, handleSubmit, formState: { errors }, setError } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -53,7 +53,7 @@ export default function RegisterScreen() {
       data.password, 
       data.fullName, 
       selectedRole, 
-      selectedRole === 'recruiter' ? selectedPosterType : undefined
+      selectedRole === 'recruiter' ? 'JOB_POSTER' : undefined
     );
     if (!result.success) {
       setError('root', { message: result.error });
@@ -126,32 +126,7 @@ export default function RegisterScreen() {
             </View>
           </Animated.View>
 
-          {selectedRole === 'recruiter' && (
-            <Animated.View entering={FadeInDown.delay(180).springify()} style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 13, color: theme.colors.textMuted, marginBottom: 8, fontFamily: theme.typography.fontFamily.medium }}>
-                Recruiter Profile Type
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                {(['HR', 'INSIDER', 'ALUMNI', 'MENTOR'] as PosterType[]).map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    onPress={() => setSelectedPosterType(type)}
-                    style={[
-                      { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border },
-                      selectedPosterType === type && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
-                    ]}
-                  >
-                    <Text style={[
-                      { fontSize: 12, fontFamily: theme.typography.fontFamily.medium },
-                      { color: selectedPosterType === type ? '#FFF' : theme.colors.textSecondary }
-                    ]}>
-                      {type}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </Animated.View>
-          )}
+
 
           {/* Form */}
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.form}>

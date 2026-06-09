@@ -56,7 +56,7 @@ router.get('/recruiters', async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('recruiter_profiles')
-      .select(`*, company:companies(*)`)
+      .select(`*`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -91,7 +91,7 @@ router.get('/jobs', async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, company:companies(*), recruiter:profiles(full_name, email)`)
+      .select(`*, recruiter:profiles(full_name, email)`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

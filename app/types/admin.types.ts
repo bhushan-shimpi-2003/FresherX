@@ -21,12 +21,6 @@ export interface PendingRecruiter {
   status: 'pending' | 'verified' | 'rejected';
   phone: string | null;
   designation: string | null;
-  company: {
-    name: string;
-    website: string | null;
-    industry: string;
-    location: string;
-  } | null;
   createdAt: string;
 }
 
@@ -34,7 +28,7 @@ export interface AdminJob {
   id: string;
   title: string;
   status: string;
-  company: { name: string; logo: string | null };
+  recruiterId: string;
   recruiter: { fullName: string; email: string };
   createdAt: string;
   reportCount: number;
@@ -42,6 +36,7 @@ export interface AdminJob {
   type?: string;
   salary?: { min: number; max: number; currency: string } | null;
   description?: string;
+  applications?: number;
 }
 
 export interface AdminUser {

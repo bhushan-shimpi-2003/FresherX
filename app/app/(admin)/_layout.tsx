@@ -72,6 +72,7 @@ export default function AdminTabsLayout() {
       />
       {/* Hidden screens */}
       <Tabs.Screen name="analytics/index" options={{ href: null }} />
+      <Tabs.Screen name="create/index" options={{ href: null }} />
     </Tabs>
   );
 }

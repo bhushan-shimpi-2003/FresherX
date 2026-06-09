@@ -61,27 +61,11 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
         >
           {/* Header */}
         <View style={styles.header}>
-          <View style={[styles.logoWrapper, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-            {job.company?.logo ? (
-              <Image source={{ uri: job.company.logo }} style={styles.logo} resizeMode="contain" />
-            ) : (
-              <Text style={[styles.logoFallback, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.bold }]}>
-                {job.company?.name?.[0] ?? '?'}
-              </Text>
-            )}
-          </View>
-
           <View style={styles.headerInfo}>
-            <Text
-              style={[styles.companyName, { color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily.medium }]}
-              numberOfLines={1}
-            >
-              {job.company?.name ?? 'Unknown Company'}
-            </Text>
             <Text
               style={[styles.postedAt, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}
             >
-              {formatRelativeTime(job.createdAt)}
+              Posted {formatRelativeTime(job.createdAt)}
             </Text>
           </View>
 
@@ -176,19 +160,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 12,
   },
-  logoWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  logo: { width: 40, height: 40 },
-  logoFallback: { fontSize: 20 },
   headerInfo: { flex: 1 },
-  companyName: { fontSize: 13, marginBottom: 2 },
   postedAt: { fontSize: 11 },
   matchBadge: {
     flexDirection: 'row',

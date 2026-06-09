@@ -10,7 +10,7 @@ router.get('/profile', async (req, res) => {
     const userId = req.user.id;
     const { data, error } = await supabaseAdmin
       .from('recruiter_profiles')
-      .select(`*, company:companies(*)`)
+      .select(`*`)
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -26,7 +26,7 @@ router.get('/jobs', async (req, res) => {
     const userId = req.user.id;
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, company:companies(*)`)
+      .select(`*`)
       .eq('recruiter_id', userId)
       .order('created_at', { ascending: false });
 

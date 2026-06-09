@@ -2,19 +2,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from '../../../../theme';
-import { useAuthStore } from '../../../../store/auth.store';
-import { useNotificationsStore } from '../../../../store/notifications.store';
-import { NotificationCard } from '../../../../components/cards/NotificationCard';
-import { EmptyState } from '../../../../components/ui/EmptyState';
-import { Loader } from '../../../../components/ui/Loader';
-import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
+import { useTheme } from '../../../theme';
+import { useAuthStore } from '../../../store/auth.store';
+import { useNotificationsStore } from '../../../store/notifications.store';
+import { NotificationCard } from '../../../components/cards/NotificationCard';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { Loader } from '../../../components/ui/Loader';
+import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { Bell, CheckCheck } from 'lucide-react-native';
 
-export default function NotificationsScreen() {
+export default function RecruiterNotificationsScreen() {
   const theme = useTheme();
   const { user } = useAuthStore();
-  const { notifications, isLoading, unreadCount, fetchNotifications, markAsRead, markAllAsRead, subscribeToNotifications } = useNotificationsStore();
+  const { notifications, isLoading, unreadCount, fetchNotifications, markAsRead, markAllAsRead, subscribeToNotifications, unsubscribeFromNotifications } = useNotificationsStore();
   const [filter, setFilter] = React.useState<string>('all');
 
   useEffect(() => {
@@ -22,9 +22,7 @@ export default function NotificationsScreen() {
       fetchNotifications(user.id);
       subscribeToNotifications(user.id);
       
-      return () => {
-        useNotificationsStore.getState().unsubscribeFromNotifications();
-      };
+      return () => unsubscribeFromNotifications();
     }
   }, [user]);
 
@@ -102,7 +100,7 @@ export default function NotificationsScreen() {
             <EmptyState
               icon={<Bell size={48} color={theme.colors.textMuted} />}
               title="No notifications yet"
-              description="We'll notify you about new jobs, deadlines, and updates"
+              description="We'll notify you about new applications and updates"
             />
           }
           showsVerticalScrollIndicator={false}

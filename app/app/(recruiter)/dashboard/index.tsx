@@ -5,7 +5,7 @@ import {
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Briefcase, Eye, Users, TrendingUp, Plus, ArrowUpRight, Clock, CheckCircle, AlertCircle } from 'lucide-react-native';
+import { Briefcase, Eye, Users, TrendingUp, Plus, ArrowUpRight, Clock, CheckCircle, AlertCircle, Bell } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
 import { useRecruiterStore } from '../../../store/recruiter.store';
@@ -74,14 +74,22 @@ export default function RecruiterDashboardScreen() {
           title={company?.name ?? profile?.fullName ?? 'Recruiter'}
           subtitle="Welcome back 👋"
           rightAction={
-            <TouchableOpacity
-              onPress={() => router.push('/(recruiter)/create')}
-              style={[styles.postBtn, { backgroundColor: theme.colors.primary }]}
-              activeOpacity={0.8}
-            >
-              <Plus size={18} color="#FFF" />
-              <Text style={styles.postBtnText}>Post Job</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => router.push('/(recruiter)/notifications')}
+                style={[styles.notifBtn, { backgroundColor: theme.colors.card }]}
+              >
+                <Bell size={20} color={theme.colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push('/(recruiter)/create')}
+                style={[styles.postBtn, { backgroundColor: theme.colors.primary }]}
+                activeOpacity={0.8}
+              >
+                <Plus size={18} color="#FFF" />
+                <Text style={styles.postBtnText}>Post Job</Text>
+              </TouchableOpacity>
+            </View>
           }
         />
         <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.headerContainer}>
@@ -197,6 +205,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8,
   },
   postBtnText: { color: '#FFF', fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+  notifBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'transparent',
+  },
   verificationBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     padding: 12, borderRadius: 12, borderWidth: 1,

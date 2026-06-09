@@ -15,7 +15,7 @@ router.get('/', requireAuth, async (req, res) => {
       .from('jobs')
       .select(`
         *,
-        company:companies(*)
+        recruiter:profiles(id, full_name, avatar, poster_type)
       `)
       .eq('status', 'published')
       .order('created_at', { ascending: false })
@@ -53,7 +53,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, company:companies(*)`)
+      .select(`*, recruiter:profiles(id, full_name, avatar, poster_type)`)
       .eq('id', id)
       .single();
 
@@ -71,6 +71,23 @@ router.post('/:id/views', requireAuth, async (req, res) => {
     const { error } = await supabaseAdmin.rpc('increment_job_views', { job_id: id });
     if (error) throw error;
     res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Increment applications
+router.post('/:id/apply', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Since we don't have an RPC yet, fetch and increment
+    const { data: job } = await supabaseAdmin.from('jobs').select('applications').eq('id', id).single();
+    const newCount = (job?.applications || 0) + 1;
+    
+    const { error } = await supabaseAdmin.from('jobs').update({ applications: newCount }).eq('id', id);
+    if (error) throw error;
+    
+    res.json({ success: true, applications: newCount });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

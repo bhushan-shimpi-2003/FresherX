@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Check, X, ShieldAlert, ChevronLeft, Building2, Search, Filter, Briefcase, MapPin, DollarSign, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Check, X, ShieldAlert, ChevronLeft, Building2, Search, Filter, Briefcase, MapPin, DollarSign, Clock, ChevronDown, ChevronUp, Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../theme';
 import { useAdminStore } from '../../../store/admin.store';
@@ -81,8 +81,7 @@ export default function AdminJobsScreen() {
                 {item.title}
               </Text>
               <View style={styles.companyRow}>
-                <Building2 size={14} color={theme.colors.textMuted} />
-                <Text style={[styles.companyName, { color: theme.colors.textMuted }]}>{item.company.name}</Text>
+                <Text style={[styles.companyName, { color: theme.colors.textMuted }]}>By: {item.recruiter.fullName}</Text>
               </View>
             </View>
             <View style={styles.headerRight}>
@@ -117,6 +116,10 @@ export default function AdminJobsScreen() {
               <View style={styles.metaItem}>
                 <Clock size={14} color={theme.colors.textSecondary} />
                 <Text style={[styles.metaText, { color: theme.colors.textSecondary }]}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Briefcase size={14} color={theme.colors.textSecondary} />
+                <Text style={[styles.metaText, { color: theme.colors.textSecondary }]}>{item.applications || 0} Applications</Text>
               </View>
             </View>
 
@@ -183,6 +186,9 @@ export default function AdminJobsScreen() {
           Job Approvals
         </Text>
         <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconBtnHeader} onPress={() => router.push('/(admin)/create')}>
+            <Plus size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtnHeader}>
             <Search size={20} color={theme.colors.text} />
           </TouchableOpacity>

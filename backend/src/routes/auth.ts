@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_for_fresherx_
 // ==========================================
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, fullName, role } = req.body;
+    const { email, password, fullName, role, posterType } = req.body;
 
     if (!email || !password || !fullName || !role) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -32,7 +32,8 @@ router.post('/register', async (req, res) => {
         email,
         password_hash,
         full_name: fullName,
-        role
+        role,
+        poster_type: posterType
       })
       .select('*')
       .single();

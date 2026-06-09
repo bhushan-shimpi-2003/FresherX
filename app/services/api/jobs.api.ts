@@ -18,15 +18,17 @@ export const jobsApi = {
   incrementView: async (jobId: string) => {
     await api.post(`/jobs/${jobId}/views`);
   },
+
+  incrementApplications: async (id: string) => {
+    await api.post(`/jobs/${id}/apply`);
+  },
 };
 
 function mapJob(raw: any): Job {
   return {
     id: raw.id,
     title: raw.title,
-    companyId: raw.company_id ?? raw.company?.id ?? '',
     recruiterId: raw.recruiter_id ?? '',
-    company: raw.company,
     description: raw.description,
     requirements: raw.requirements,
     skills: raw.skills ?? [],
@@ -45,5 +47,7 @@ function mapJob(raw: any): Job {
     isSaved: false,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
+    referralAvailable: raw.referral_available ?? false,
+    referralSlots: raw.referral_slots ?? 0,
   };
 }

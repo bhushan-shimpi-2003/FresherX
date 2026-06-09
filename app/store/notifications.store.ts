@@ -26,6 +26,8 @@ interface NotificationsStore {
   markAllAsRead: (userId: string) => Promise<void>;
   setPushToken: (token: string) => void;
   addNotification: (notification: Notification) => void;
+  subscribeToNotifications: (userId: string) => void;
+  unsubscribeFromNotifications: () => void;
   reset: () => void;
 }
 
@@ -92,5 +94,43 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
         unreadCount: 0,
       }));
     } catch {}
+  },
+
+  subscribeToNotifications: (userId) => {
+    const channel = supabase.channel(`notifications-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const newNotif = payload.new as any;
+          // Transform from snake_case to camelCase
+          const notification: Notification = {
+            id: newNotif.id,
+            userId: newNotif.user_id,
+            type: newNotif.type,
+            title: newNotif.title,
+            body: newNotif.body,
+            data: newNotif.data,
+            isRead: newNotif.is_read,
+            createdAt: newNotif.created_at,
+          };
+          
+          set((state) => ({
+            notifications: [notification, ...state.notifications],
+            unreadCount: state.unreadCount + 1,
+          }));
+        }
+      )
+      .subscribe();
+
+    // Store channel on state (need to add it to interface)
+    set({ channel } as any);
+  },
+
+  unsubscribeFromNotifications: () => {
+    const { channel } = get() as any;
+    if (channel) {
+      channel.unsubscribe();
+    }
   },
 }));

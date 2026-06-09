@@ -37,12 +37,19 @@ export default function JobDetailScreen() {
   const job = selectedJob;
   const matchColor = job.matchScore ? getMatchColor(job.matchScore) : theme.colors.primary;
 
-  const handleApply = () => {
-    if (job.applyLink) Linking.openURL(job.applyLink);
+  const handleApply = async () => {
+    if (job.applyLink) {
+      try {
+        await jobsApi.incrementApplications(job.id);
+      } catch (err) {
+        console.warn('Failed to increment applications', err);
+      }
+      Linking.openURL(job.applyLink);
+    }
   };
 
   const handleShare = async () => {
-    await Share.share({ message: `Check out this job: ${job.title} at ${job.company?.name}` });
+    await Share.share({ message: `Check out this job: ${job.title}` });
   };
 
   const handleSaveToggle = () => {
@@ -71,14 +78,7 @@ export default function JobDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Company hero */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.hero}>
-          <View style={[styles.companyLogo, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-            <Text style={[styles.logoText, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.bold }]}>
-              {job.company?.name?.[0] ?? '?'}
-            </Text>
-          </View>
-          <Text style={[styles.companyName, { color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily.medium }]}>
-            {job.company?.name}
-          </Text>
+
           <Text style={[styles.jobTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.extraBold }]}>
             {job.title}
           </Text>
@@ -187,12 +187,6 @@ const styles = StyleSheet.create({
   },
   scroll: { paddingHorizontal: 16 },
   hero: { alignItems: 'center', paddingVertical: 28, gap: 10 },
-  companyLogo: {
-    width: 72, height: 72, borderRadius: 20,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1,
-  },
-  logoText: { fontSize: 30 },
-  companyName: { fontSize: 13 },
   jobTitle: { fontSize: 24, textAlign: 'center', lineHeight: 30, letterSpacing: -0.3 },
   matchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,

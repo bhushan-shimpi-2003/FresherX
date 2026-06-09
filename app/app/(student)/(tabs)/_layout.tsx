@@ -74,13 +74,7 @@ export default function StudentTabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="chat/index"
-        options={{
-          title: 'Chat',
-          tabBarIcon: ({ color, focused }) => <TabIcon Icon={MessageSquare} color={color} focused={focused} />,
-        }}
-      />
+
       <Tabs.Screen
         name="profile/index"
         options={{

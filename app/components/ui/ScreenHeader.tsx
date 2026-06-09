@@ -1,18 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../theme';
 
 interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
   rightAction?: React.ReactNode;
+  showBack?: boolean;
 }
 
-export function ScreenHeader({ title, subtitle, rightAction }: ScreenHeaderProps) {
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
+
+export function ScreenHeader({ title, subtitle, rightAction, showBack }: ScreenHeaderProps) {
   const theme = useTheme();
+  const router = useRouter();
 
   return (
     <View style={styles.header}>
+      {showBack && (
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.backBtn}
+        >
+          <ArrowLeft size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+      )}
       <View style={styles.leftContent}>
         <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
           {title}
@@ -39,6 +52,10 @@ const styles = StyleSheet.create({
   },
   leftContent: {
     flex: 1,
+    justifyContent: 'center',
+  },
+  backBtn: {
+    marginRight: 12,
     justifyContent: 'center',
   },
   rightContent: {

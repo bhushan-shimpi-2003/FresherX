@@ -64,30 +64,21 @@ export default function RecruiterTabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="chat/index"
-        options={{
-          title: 'Chat',
-          tabBarIcon: ({ color, focused }) => (
-            <MessageSquare size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="profile/index"
         options={{
-          title: 'Company',
+          title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <User size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
           ),
         }}
       />
       {/* Hidden screens */}
-      <Tabs.Screen name="chat/[id]" options={{ href: null }} />
-      <Tabs.Screen name="chat/requests" options={{ href: null }} />
       <Tabs.Screen name="post/[id]" options={{ href: null }} />
       <Tabs.Screen name="settings/index" options={{ href: null }} />
       <Tabs.Screen name="onboarding/company-setup" options={{ href: null }} />
+      <Tabs.Screen name="notifications/index" options={{ href: null }} />
     </Tabs>
   );
 }
