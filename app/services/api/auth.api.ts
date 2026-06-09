@@ -60,6 +60,14 @@ export const authApi = {
   },
 
   /**
+   * Permanently delete user account
+   */
+  deleteAccount: async () => {
+    const response = await api.delete('/profile/account');
+    return response.data;
+  },
+
+  /**
    * Change password for logged-in user (requires current password)
    */
   changePassword: async (currentPassword: string, newPassword: string) => {

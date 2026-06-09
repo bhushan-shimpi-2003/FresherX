@@ -62,4 +62,34 @@ router.put('/', async (req, res) => {
   }
 });
 
+router.delete('/account', async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Supabase Auth Admin can delete the user directly from the auth.users table.
+    // If you have `ON DELETE CASCADE` set up on your `profiles` table referencing `auth.users`,
+    // this will automatically delete the user's profile and everything else linked to it.
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    
+    if (authError) {
+      // If for some reason the user wasn't in auth.users (e.g. custom auth system),
+      // we just delete from profiles table manually.
+      console.warn('Auth deletion warning:', authError.message);
+    }
+
+    // Manually delete the public profile to be absolutely sure
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (profileError) throw profileError;
+
+    res.json({ success: true, message: 'Account permanently deleted' });
+  } catch (error: any) {
+    console.error('Account Deletion Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

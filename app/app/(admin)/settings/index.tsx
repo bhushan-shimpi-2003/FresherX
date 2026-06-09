@@ -382,49 +382,26 @@ export default function AdminSettingsScreen() {
           </View>
         </Animated.View>
 
-        {/* Logout */}
-        <Animated.View entering={FadeInDown.delay(350).springify()} style={styles.group}>
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={[styles.logoutBtn, { backgroundColor: theme.colors.errorBg, borderColor: theme.colors.error + '30' }]}
-            activeOpacity={0.8}
-          >
-            <LogOut size={18} color={theme.colors.error} />
-            <Text style={[styles.logoutText, { color: theme.colors.error, fontFamily: theme.typography.fontFamily.semiBold }]}>
-              Log Out
-            </Text>
-          </TouchableOpacity>
+        {/* Account & Security */}
+        <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.group}>
+          <Text style={[styles.groupLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }]}>
+            ACCOUNT & SECURITY
+          </Text>
+          <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => router.push('/(shared)/settings')}>
+              <View style={[styles.iconWrap, { backgroundColor: theme.colors.info + '20' }]}>
+                <Shield size={18} color={theme.colors.info} />
+              </View>
+              <Text style={[styles.settingLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium, flex: 1 }]}>
+                Account Settings & Privacy
+              </Text>
+              <ChevronRight size={16} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      {/* Change Password Modal */}
-      <BottomSheetModal ref={bottomSheetRef} snapPoints={['60%']} title="Change Password">
-        <View style={{ gap: 16, marginTop: 16 }}>
-          <Input
-            label="Current Password"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            placeholder="Enter current password"
-            secureTextEntry
-          />
-          <Input
-            label="New Password"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Enter new password (min 6 characters)"
-            secureTextEntry
-            error={passwordError}
-          />
-          <Button
-            label="Save New Password"
-            onPress={handleChangePassword}
-            loading={isChangingPassword}
-            style={{ marginTop: 8 }}
-          />
-        </View>
-      </BottomSheetModal>
     </SafeAreaView>
   );
 }
