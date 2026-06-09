@@ -3,14 +3,16 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
+import { sensitiveRouteLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_for_fresherx_change_me';
 
 // ==========================================
+// ==========================================
 // REGISTER ROUTE
 // ==========================================
-router.post('/register', async (req, res) => {
+router.post('/register', sensitiveRouteLimiter, async (req, res) => {
   try {
     const { email, password, fullName, role, posterType } = req.body;
 
@@ -95,9 +97,10 @@ router.post('/register', async (req, res) => {
 });
 
 // ==========================================
+// ==========================================
 // LOGIN ROUTE
 // ==========================================
-router.post('/login', async (req, res) => {
+router.post('/login', sensitiveRouteLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -156,9 +159,10 @@ router.post('/login', async (req, res) => {
 });
 
 // ==========================================
+// ==========================================
 // UPDATE PASSWORD ROUTE
 // ==========================================
-router.put('/update-password', requireAuth, async (req, res) => {
+router.put('/update-password', requireAuth, sensitiveRouteLimiter, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { currentPassword, newPassword } = req.body;

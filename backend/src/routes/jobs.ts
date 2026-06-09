@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
+import { sensitiveRouteLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -139,7 +140,7 @@ router.post('/:id/views', requireAuth, async (req, res) => {
 });
 
 // Increment applications
-router.post('/:id/apply', requireAuth, async (req, res) => {
+router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     // Since we don't have an RPC yet, fetch and increment
