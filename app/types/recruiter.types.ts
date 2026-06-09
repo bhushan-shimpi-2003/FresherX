@@ -3,6 +3,29 @@
 export type RecruiterStatus = 'pending' | 'verified' | 'rejected';
 export type PosterType = 'JOB_POSTER';
 
+export interface RecruiterCompany {
+  id: string;
+  name: string;
+  logo: string | null;
+  website: string | null;
+  industry: string | null;
+  size: string | null;
+  location: string | null;
+  description: string | null;
+  linkedIn: string | null;
+}
+
+export interface CreateCompanyPayload {
+  name: string;
+  logo?: string;
+  website?: string;
+  industry?: string;
+  size?: string;
+  location?: string;
+  description?: string;
+  linkedIn?: string;
+}
+
 export interface RecruiterProfile {
   id: string;
   userId: string;
@@ -12,8 +35,8 @@ export interface RecruiterProfile {
   phone: string | null;
   designation: string | null;
   posterType: PosterType | null;
-
-
+  companyId: string | null;
+  company?: RecruiterCompany;
 
   // Verification
   status: RecruiterStatus;
@@ -42,4 +65,5 @@ export interface RecruiterDashboardStats {
   totalViews: number;
   totalApplications: number;
   thisWeekJobs: number;
+  applicationsChart?: { date: string; label: string; value: number }[];
 }

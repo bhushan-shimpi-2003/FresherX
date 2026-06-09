@@ -1,10 +1,11 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BarChart } from 'react-native-gifted-charts';
 import { Briefcase, Eye, Users, TrendingUp, Plus, ArrowUpRight, Clock, CheckCircle, AlertCircle, Bell } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
@@ -27,7 +28,7 @@ export default function RecruiterDashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { profile, company, jobs, stats, isLoading, fetchProfile, fetchJobs, fetchStats } = useRecruiterStore();
+  const { profile, company, jobs, stats, analytics, isLoading, fetchProfile, fetchJobs, fetchStats } = useRecruiterStore();
 
   useEffect(() => {
     if (user) {
@@ -47,6 +48,10 @@ export default function RecruiterDashboardScreen() {
   ];
 
   const recentJobs = jobs.slice(0, 5);
+
+  const topJobs = [...jobs]
+    .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+    .slice(0, 5);
 
   const statusMap: Record<string, { label: string; variant: any }> = {
     published: { label: 'Live', variant: 'success' },
@@ -190,6 +195,82 @@ export default function RecruiterDashboardScreen() {
             })
           )}
         </Animated.View>
+
+        {/* Applications Bar Chart */}
+        {topJobs.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(180).springify()} style={[styles.chartCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border, marginTop: 24, marginHorizontal: 20 }]}>
+            <Text style={[styles.chartTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
+              Applications per Job
+            </Text>
+            <View style={{ marginLeft: -10 }}>
+              <BarChart
+                data={topJobs.slice(0, 4).map((job, idx) => ({
+                  value: job.applications ?? 0,
+                  label: `J${idx + 1}`,
+                  frontColor: [theme.colors.primary, theme.colors.info, theme.colors.accent, theme.colors.success][idx % 4],
+                }))}
+                width={Dimensions.get('window').width - 80}
+                height={160}
+                barWidth={35}
+                spacing={30}
+                roundedTop
+                barBorderRadius={6}
+                xAxisColor={theme.colors.border}
+                yAxisColor={theme.colors.border}
+                rulesColor={theme.colors.border}
+                yAxisTextStyle={{ color: theme.colors.textMuted, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}
+                xAxisLabelTextStyle={{ color: theme.colors.textMuted, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}
+                isAnimated
+              />
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Performance Analytics */}
+        {analytics && analytics.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={{ marginTop: 24 }}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
+                Performance Analytics
+              </Text>
+            </View>
+            <View style={{ paddingHorizontal: 16, gap: 16 }}>
+              {analytics.map((item) => (
+                <View key={item.jobId} style={[styles.jobRow, { backgroundColor: theme.colors.card + '90', borderColor: theme.colors.border, flexDirection: 'column', alignItems: 'stretch' }]}>
+                  <Text style={[styles.jobTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={{ fontSize: 13, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Conversion Rate</Text>
+                    <Text style={{ fontSize: 13, color: theme.colors.primary, fontFamily: theme.typography.fontFamily.semiBold }}>
+                      {item.conversionRate?.toFixed(1) ?? 0}%
+                    </Text>
+                  </View>
+                  
+                  <View style={{ height: 6, backgroundColor: theme.colors.border, borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
+                    <View style={{ height: '100%', width: `${Math.min(item.conversionRate ?? 0, 100)}%`, backgroundColor: theme.colors.primary, borderRadius: 3 }} />
+                  </View>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10 }}>
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.views ?? 0}</Text>
+                      <Text style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Views</Text>
+                    </View>
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.applications ?? 0}</Text>
+                      <Text style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Applicants</Text>
+                    </View>
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.saves ?? 0}</Text>
+                      <Text style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Saves</Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </Animated.View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -204,6 +285,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 10, borderRadius: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8,
   },
+  chartCard: { padding: 20, borderRadius: 20, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  chartTitle: { fontSize: 16, marginBottom: 20 },
   postBtnText: { color: '#FFF', fontSize: 14, fontFamily: 'Inter_600SemiBold' },
   notifBtn: {
     width: 40, height: 40, borderRadius: 20,

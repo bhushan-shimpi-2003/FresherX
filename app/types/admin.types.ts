@@ -47,6 +47,7 @@ export interface AdminUser {
   status: 'active' | 'suspended';
   createdAt: string;
   lastSeen: string | null;
+  auto_verified?: boolean;
 }
 
 export interface Report {

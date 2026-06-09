@@ -43,8 +43,12 @@ export function formatDeadline(deadline: string | null): string {
 /**
  * Format date as relative time or absolute
  */
-export function formatRelativeTime(dateStr: string): string {
+export function formatRelativeTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'Just now';
+  
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return 'Unknown Date';
+
   const diff = Date.now() - date.getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);

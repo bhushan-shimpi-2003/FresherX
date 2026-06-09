@@ -125,8 +125,8 @@ export default function JobDetailScreen() {
             Required Skills
           </Text>
           <View style={styles.skills}>
-            {job.skills.map((skill) => (
-              <Badge key={skill} label={skill} variant="primary" />
+            {job.skills.map((skill, idx) => (
+              <Badge key={idx} label={skill} variant="primary" />
             ))}
           </View>
         </Animated.View>

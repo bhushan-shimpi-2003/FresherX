@@ -61,6 +61,10 @@ export const adminApi = {
     await api.post(`/admin/users/${userId}/status`, { action });
   },
 
+  toggleAutoVerify: async (userId: string, autoVerified: boolean) => {
+    await api.post(`/admin/users/${userId}/auto-verify`, { autoVerified });
+  },
+
   fetchReports: async (): Promise<Report[]> => {
     const { data } = await api.get('/admin/reports');
     return data;

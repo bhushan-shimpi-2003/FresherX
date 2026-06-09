@@ -26,6 +26,7 @@ interface AdminStore {
   reviewJob: (payload: ReviewJobPayload) => Promise<{ success: boolean; error?: string }>;
   fetchUsers: () => Promise<void>;
   updateUserStatus: (userId: string, action: 'suspend' | 'activate') => Promise<{ success: boolean; error?: string }>;
+  toggleAutoVerify: (userId: string, autoVerified: boolean) => Promise<{ success: boolean; error?: string }>;
   fetchReports: () => Promise<void>;
   resolveReport: (reportId: string, action: 'resolve' | 'dismiss' | 'open') => Promise<{ success: boolean; error?: string }>;
   fetchAnalytics: () => Promise<void>;
@@ -128,6 +129,18 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       await adminApi.updateUserStatus(userId, action);
       set((state) => ({
         users: state.users.map((u) => u.id === userId ? { ...u, status: action === 'suspend' ? 'suspended' : 'active' } : u),
+      }));
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message };
+    }
+  },
+
+  toggleAutoVerify: async (userId, autoVerified) => {
+    try {
+      await adminApi.toggleAutoVerify(userId, autoVerified);
+      set((state) => ({
+        users: state.users.map((u) => u.id === userId ? { ...u, auto_verified: autoVerified } : u),
       }));
       return { success: true };
     } catch (err: any) {

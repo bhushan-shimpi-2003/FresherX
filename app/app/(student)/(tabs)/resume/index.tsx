@@ -8,16 +8,20 @@ import { useTheme } from '../../../../theme';
 import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
 import { Download, Plus, Trash2, ArrowRight, ArrowLeft } from 'lucide-react-native';
 import { Button } from '../../../../components/ui/Button';
+import { profileApi } from '../../../../services/api/profile.api';
 
 export default function ResumeBuilderScreen() {
   const theme = useTheme();
-  const { profile } = useUserStore();
+  const { profile, setProfile } = useUserStore();
   const store = useResumeStore();
   const [currentStep, setCurrentStep] = useState(1);
 
   // Auto-fill from profile on first load if empty
   useEffect(() => {
-    if (!store.data.fullName && profile) {
+    if (profile?.resumeData) {
+      // Load saved resume data from the database
+      store.updateData(profile.resumeData);
+    } else if (!store.data.fullName && profile) {
       store.updateData({
         fullName: profile.fullName || '',
         email: profile.email || '',
@@ -30,6 +34,11 @@ export default function ResumeBuilderScreen() {
 
   const handleDownload = async () => {
     try {
+      if (profile?.userId) {
+        // Save to database
+        const updatedProfile = await profileApi.updateProfile(profile.userId, { resumeData: store.data });
+        setProfile(updatedProfile);
+      }
       await generateResumePDF(store.data);
     } catch (err) {
       console.log('Failed to generate resume', err);

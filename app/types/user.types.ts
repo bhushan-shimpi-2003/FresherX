@@ -37,6 +37,7 @@ export interface StudentProfile {
 
   createdAt: string;
   updatedAt: string;
+  resumeData?: any;
 }
 
 export interface Notification {
@@ -68,4 +69,5 @@ export interface UpdateStudentPayload {
   resumeUrl?: string;
   resumeName?: string;
   onboardingComplete?: boolean;
+  resumeData?: any;
 }

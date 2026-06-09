@@ -42,6 +42,17 @@ router.post('/jobs', async (req, res) => {
     const userId = req.user.id;
     const payload = req.body;
     
+    const { data: profile } = await supabaseAdmin
+      .from('recruiter_profiles')
+      .select('auto_verified')
+      .eq('user_id', userId)
+      .single();
+
+    const isAutoVerified = profile?.auto_verified === true;
+    const initialStatus = payload.status || (isAutoVerified ? 'published' : 'pending');
+
+    console.log('[DEBUG JOB POST]', payload);
+
     const { data, error } = await supabaseAdmin
       .from('jobs')
       .insert({
@@ -51,20 +62,59 @@ router.post('/jobs', async (req, res) => {
         description: payload.description,
         requirements: payload.requirements,
         skills: payload.skills,
-        job_type: payload.jobType,
-        experience_level: payload.experienceLevel,
+        job_type: payload.jobType || 'Full-time',
+        experience_level: payload.experienceLevel || 'Fresher',
         salary_min: payload.salaryMin,
         salary_max: payload.salaryMax,
         location: payload.location,
         is_remote: payload.isRemote ?? false,
         apply_link: payload.applyLink,
         deadline: payload.deadline,
-        status: payload.status || 'pending',
+        status: initialStatus,
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    if (initialStatus === 'published') {
+      // Auto-verified: trigger student matching immediately
+      if (payload.skills && payload.skills.length > 0) {
+        const { data: matchingStudents } = await supabaseAdmin
+          .from('student_profiles')
+          .select('user_id')
+          .overlaps('skills', payload.skills);
+
+        if (matchingStudents && matchingStudents.length > 0) {
+          const notifications = matchingStudents.map(student => ({
+            user_id: student.user_id,
+            title: 'New Matching Job!',
+            body: `${payload.companyName || 'A company'} just posted a new job: ${payload.title} that matches your skills. Apply fast!`,
+            type: 'job_alert',
+            data: { job_id: data.id }
+          }));
+          await supabaseAdmin.from('notifications').insert(notifications);
+        }
+      }
+    } else {
+      // Pending: Send notification to all admins for verification
+      const { data: admins } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('role', 'admin');
+        
+      if (admins && admins.length > 0) {
+        const notifications = admins.map(admin => ({
+          user_id: admin.id,
+          title: 'New Job Requires Verification',
+          body: `${payload.companyName || 'A recruiter'} posted a new job: ${payload.title}. Please review it.`,
+          type: 'job_verification',
+          data: { job_id: data.id }
+        }));
+        await supabaseAdmin.from('notifications').insert(notifications);
+      }
+    }
+
     res.json(data);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -128,6 +178,28 @@ router.put('/jobs/:id', async (req, res) => {
   }
 });
 
+router.delete('/jobs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Cleanup related records first to avoid foreign key constraints
+    await supabaseAdmin.from('job_matches').delete().eq('job_id', id);
+    await supabaseAdmin.from('saved_jobs').delete().eq('job_id', id);
+    await supabaseAdmin.from('applications').delete().eq('job_id', id);
+
+    const { error } = await supabaseAdmin
+      .from('jobs')
+      .delete()
+      .eq('id', id)
+      .eq('recruiter_id', req.user.id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/company', async (req, res) => {
   try {
     const userId = req.user.id;
@@ -165,16 +237,49 @@ router.get('/stats', async (req, res) => {
       { count: pendingJobs },
       { data: viewData },
       { data: appData },
+      { data: jobsData },
     ] = await Promise.all([
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId),
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).eq('status', 'published'),
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).eq('status', 'pending'),
       supabaseAdmin.from('jobs').select('views').eq('recruiter_id', userId),
       supabaseAdmin.from('jobs').select('applications').eq('recruiter_id', userId),
+      supabaseAdmin.from('jobs').select('id').eq('recruiter_id', userId),
     ]);
 
     const totalViews = (viewData ?? []).reduce((sum: number, j: any) => sum + (j.views ?? 0), 0);
     const totalApplications = (appData ?? []).reduce((sum: number, j: any) => sum + (j.applications ?? 0), 0);
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+    const applicationsChart = Array(7).fill(0).map((_, i) => {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i);
+      return {
+        date: d.toISOString().split('T')[0],
+        label: d.toLocaleDateString('en-US', { weekday: 'short' })[0],
+        value: 0
+      };
+    });
+
+    const jobIds = jobsData?.map((j: any) => j.id) || [];
+    if (jobIds.length > 0) {
+      const { data: recentApps } = await supabaseAdmin
+        .from('applications')
+        .select('created_at')
+        .in('job_id', jobIds)
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      if (recentApps) {
+        recentApps.forEach((app: any) => {
+          const dateStr = app.created_at.split('T')[0];
+          const dayStats = applicationsChart.find(d => d.date === dateStr);
+          if (dayStats) dayStats.value += 1;
+        });
+      }
+    }
 
     res.json({
       totalJobs: totalJobs ?? 0,
@@ -183,6 +288,7 @@ router.get('/stats', async (req, res) => {
       totalViews,
       totalApplications,
       thisWeekJobs: 0,
+      applicationsChart,
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

@@ -53,32 +53,33 @@ export default function RecruiterAnalyticsScreen() {
         </Animated.View>
 
         {/* Views Chart */}
-        <Animated.View entering={FadeInDown.delay(120).springify()} style={styles.chartCard}>
+        <Animated.View entering={FadeInDown.delay(120).springify()} style={[styles.chartCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
           <Text style={[styles.chartTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
-            Profile Views (Last 7 Days)
+            Total Applications (Last 7 Days)
           </Text>
           <View style={{ marginLeft: -10 }}>
             <LineChart
-              data={[
-                { value: 10, label: 'M' },
-                { value: 30, label: 'T' },
-                { value: 20, label: 'W' },
-                { value: 50, label: 'T' },
-                { value: 40, label: 'F' },
-                { value: 80, label: 'S' },
-                { value: 100, label: 'S' },
+              data={stats?.applicationsChart?.length ? stats.applicationsChart : [
+                { value: 0, label: 'M' }, { value: 0, label: 'T' }, { value: 0, label: 'W' },
+                { value: 0, label: 'T' }, { value: 0, label: 'F' }, { value: 0, label: 'S' }, { value: 0, label: 'S' }
               ]}
               width={Dimensions.get('window').width - 80}
               height={140}
               color={theme.colors.primary}
-              thickness={3}
+              thickness={4}
               dataPointsColor={theme.colors.primary}
+              dataPointsRadius={4}
               xAxisColor={theme.colors.border}
               yAxisColor={theme.colors.border}
               rulesColor={theme.colors.border}
-              yAxisTextStyle={{ color: theme.colors.textMuted, fontSize: 10 }}
-              xAxisLabelTextStyle={{ color: theme.colors.textMuted, fontSize: 10 }}
+              yAxisTextStyle={{ color: theme.colors.textMuted, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}
+              xAxisLabelTextStyle={{ color: theme.colors.textMuted, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}
               curved
+              areaChart
+              startFillColor={theme.colors.primary}
+              endFillColor={theme.colors.primary}
+              startOpacity={0.2}
+              endOpacity={0.0}
               hideDataPoints={false}
               isAnimated
             />
@@ -87,7 +88,7 @@ export default function RecruiterAnalyticsScreen() {
 
         {/* Applications Bar Chart */}
         {topJobs.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(130).springify()} style={styles.chartCard}>
+          <Animated.View entering={FadeInDown.delay(130).springify()} style={[styles.chartCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
             <Text style={[styles.chartTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
               Applications per Job
             </Text>
@@ -100,14 +101,15 @@ export default function RecruiterAnalyticsScreen() {
                 }))}
                 width={Dimensions.get('window').width - 80}
                 height={160}
-                barWidth={30}
-                spacing={25}
+                barWidth={35}
+                spacing={30}
                 roundedTop
+                barBorderRadius={6}
                 xAxisColor={theme.colors.border}
                 yAxisColor={theme.colors.border}
                 rulesColor={theme.colors.border}
-                yAxisTextStyle={{ color: theme.colors.textMuted, fontSize: 10 }}
-                xAxisLabelTextStyle={{ color: theme.colors.textMuted, fontSize: 10 }}
+                yAxisTextStyle={{ color: theme.colors.textMuted, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}
+                xAxisLabelTextStyle={{ color: theme.colors.textMuted, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}
                 isAnimated
               />
             </View>
@@ -161,6 +163,6 @@ const styles = StyleSheet.create({
   jobTitle: { fontSize: 14, marginBottom: 3 },
   jobStats: { fontSize: 12 },
   emptyText: { fontSize: 14, textAlign: 'center', padding: 20 },
-  chartCard: { padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 20, borderColor: '#333', backgroundColor: '#1A1A1A' },
-  chartTitle: { fontSize: 16, marginBottom: 16 },
+  chartCard: { padding: 20, borderRadius: 20, borderWidth: 1, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  chartTitle: { fontSize: 16, marginBottom: 20 },
 });

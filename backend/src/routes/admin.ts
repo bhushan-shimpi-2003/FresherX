@@ -113,6 +113,35 @@ router.post('/jobs/:id/review', async (req, res) => {
       .eq('id', id);
 
     if (error) throw error;
+
+    if (action === 'approve') {
+      // Fetch the job details
+      const { data: job } = await supabaseAdmin
+        .from('jobs')
+        .select('title, company_name, skills')
+        .eq('id', id)
+        .single();
+        
+      if (job && job.skills && job.skills.length > 0) {
+        // Find students whose skills overlap with job skills
+        const { data: matchingStudents } = await supabaseAdmin
+          .from('student_profiles')
+          .select('user_id')
+          .overlaps('skills', job.skills);
+
+        if (matchingStudents && matchingStudents.length > 0) {
+          const notifications = matchingStudents.map(student => ({
+            user_id: student.user_id,
+            title: 'New Matching Job!',
+            body: `${job.company_name || 'A company'} just posted a new job: ${job.title} that matches your skills. Apply fast!`,
+            type: 'job_alert',
+            data: { job_id: id }
+          }));
+          // Insert notifications in batches if needed, but for now we do it in one go
+          await supabaseAdmin.from('notifications').insert(notifications);
+        }
+      }
+    }
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -156,12 +185,37 @@ router.get('/users', async (req, res) => {
     const page = parseInt(req.query.page as string || '0', 10);
     const { data, error } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, full_name, role, status, created_at, last_seen')
+      .select('id, email, full_name, role, status, created_at, last_seen, recruiter_profiles(auto_verified)')
       .order('created_at', { ascending: false })
       .range(page * 50, (page + 1) * 50 - 1);
 
     if (error) throw error;
-    res.json(data);
+    
+    // Flatten the recruiter_profiles object for easier frontend consumption
+    const formattedData = data.map(user => ({
+      ...user,
+      auto_verified: user.recruiter_profiles ? (user.recruiter_profiles as any).auto_verified : false,
+      recruiter_profiles: undefined
+    }));
+
+    res.json(formattedData);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/users/:id/auto-verify', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { autoVerified } = req.body;
+    
+    // Only applies to recruiters, we just update or insert their recruiter_profile
+    const { error } = await supabaseAdmin
+      .from('recruiter_profiles')
+      .upsert({ user_id: id, auto_verified: autoVerified }, { onConflict: 'user_id' });
+
+    if (error) throw error;
+    res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

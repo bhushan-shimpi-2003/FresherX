@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, MoreVertical, Ban, Mail, Search, Shield, Filter } from 'lucide-react-native';
+import { ChevronLeft, MoreVertical, Ban, Mail, Search, Shield, Filter, Zap } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../theme';
 import { useAdminStore } from '../../../store/admin.store';
@@ -17,7 +17,7 @@ type RoleTab = 'all' | 'student' | 'recruiter' | 'admin';
 export default function AdminUsersScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { users, isLoading, error, fetchUsers, updateUserStatus } = useAdminStore();
+  const { users, isLoading, error, fetchUsers, updateUserStatus, toggleAutoVerify } = useAdminStore();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRole, setActiveRole] = useState<RoleTab>('all');
@@ -44,6 +44,30 @@ export default function AdminUsersScreen() {
           style: action === 'suspend' ? 'destructive' : 'default',
           onPress: async () => {
             await updateUserStatus(userId, action);
+          },
+        },
+      ]);
+    }
+  };
+
+  const handleAutoVerify = (userId: string, email: string, currentStatus: boolean) => {
+    const title = currentStatus ? 'Revoke Auto-Verify' : 'Grant Auto-Verify';
+    const msg = currentStatus
+      ? `Are you sure you want to revoke auto-verify permissions for ${email}? Their job posts will require manual approval again.`
+      : `Are you sure you want to grant auto-verify permissions to ${email}? Their job posts will automatically go live.`;
+    
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${msg}`)) {
+        toggleAutoVerify(userId, !currentStatus);
+      }
+    } else {
+      Alert.alert(title, msg, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: currentStatus ? 'Revoke' : 'Grant',
+          style: currentStatus ? 'destructive' : 'default',
+          onPress: async () => {
+            await toggleAutoVerify(userId, !currentStatus);
           },
         },
       ]);
@@ -93,21 +117,33 @@ export default function AdminUsersScreen() {
         <View style={styles.badges}>
           <Badge label={item.role.toUpperCase()} variant={item.role === 'recruiter' ? 'info' : item.role === 'admin' ? 'warning' : 'default'} size="sm" />
           <Badge label={item.status} variant={item.status === 'active' ? 'success' : 'error'} size="sm" />
+          {item.role === 'recruiter' && item.auto_verified && (
+            <Badge label="AUTO-VERIFIED" variant="success" size="sm" />
+          )}
         </View>
 
-        {item.role !== 'admin' && (
-          item.status !== 'suspended' ? (
-            <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'suspend')} style={[styles.suspendBtn, { backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error + '30' }]}>
-              <Ban size={14} color={theme.colors.error} />
-              <Text style={[styles.suspendText, { color: theme.colors.error }]}>Suspend</Text>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {item.role === 'recruiter' && item.status !== 'suspended' && (
+            <TouchableOpacity onPress={() => handleAutoVerify(item.id, item.email, !!item.auto_verified)} style={[styles.suspendBtn, { backgroundColor: item.auto_verified ? theme.colors.warning + '10' : theme.colors.primary + '10', borderColor: item.auto_verified ? theme.colors.warning + '30' : theme.colors.primary + '30' }]}>
+              <Zap size={14} color={item.auto_verified ? theme.colors.warning : theme.colors.primary} />
+              <Text style={[styles.suspendText, { color: item.auto_verified ? theme.colors.warning : theme.colors.primary }]}>{item.auto_verified ? 'Revoke' : 'Auto-Verify'}</Text>
             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'activate')} style={[styles.suspendBtn, { backgroundColor: theme.colors.success + '10', borderColor: theme.colors.success + '30' }]}>
-              <Shield size={14} color={theme.colors.success} />
-              <Text style={[styles.suspendText, { color: theme.colors.success }]}>Reactivate</Text>
-            </TouchableOpacity>
-          )
-        )}
+          )}
+
+          {item.role !== 'admin' && (
+            item.status !== 'suspended' ? (
+              <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'suspend')} style={[styles.suspendBtn, { backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error + '30' }]}>
+                <Ban size={14} color={theme.colors.error} />
+                <Text style={[styles.suspendText, { color: theme.colors.error }]}>Suspend</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'activate')} style={[styles.suspendBtn, { backgroundColor: theme.colors.success + '10', borderColor: theme.colors.success + '30' }]}>
+                <Shield size={14} color={theme.colors.success} />
+                <Text style={[styles.suspendText, { color: theme.colors.success }]}>Reactivate</Text>
+              </TouchableOpacity>
+            )
+          )}
+        </View>
       </View>
     </Animated.View>
   );

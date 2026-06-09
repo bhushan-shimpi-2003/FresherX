@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Trash2, Edit, ArrowUpRight } from 'lucide-react-native';
@@ -51,10 +51,30 @@ export default function RecruiterPostsScreen() {
     : allPosts.filter((j) => j.status === activeFilter);
 
   const handleDelete = (jobId: string, title: string) => {
-    Alert.alert('Delete Post', `Delete "${title}"? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteJob(jobId) },
-    ]);
+    if (Platform.OS === 'web') {
+      const confirmDelete = window.confirm(`Delete "${title}"? This cannot be undone.`);
+      if (confirmDelete) {
+        deleteJob(jobId).then((res) => {
+          if (!res.success) {
+            window.alert(res.error || 'Failed to delete job');
+          }
+        });
+      }
+    } else {
+      Alert.alert('Delete Post', `Delete "${title}"? This cannot be undone.`, [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            const res = await deleteJob(jobId);
+            if (!res.success) {
+              Alert.alert('Error', res.error || 'Failed to delete job');
+            }
+          } 
+        },
+      ]);
+    }
   };
 
   return (

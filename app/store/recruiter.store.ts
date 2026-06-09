@@ -90,7 +90,20 @@ export const useRecruiterStore = create<RecruiterStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await recruiterApi.fetchJobs();
-      const allJobs = (data ?? []) as Job[];
+      const allJobs = (data ?? []).map((j: any) => ({
+        ...j,
+        jobType: j.job_type || j.jobType,
+        experienceLevel: j.experience_level || j.experienceLevel,
+        salaryMin: j.salary_min !== undefined ? j.salary_min : j.salaryMin,
+        salaryMax: j.salary_max !== undefined ? j.salary_max : j.salaryMax,
+        isRemote: j.is_remote !== undefined ? j.is_remote : j.isRemote,
+        applyLink: j.apply_link || j.applyLink,
+        createdAt: j.created_at || j.createdAt,
+        updatedAt: j.updated_at || j.updatedAt,
+        companyName: j.company_name || j.companyName,
+        referralAvailable: j.referral_available !== undefined ? j.referral_available : j.referralAvailable,
+        referralSlots: j.referral_slots !== undefined ? j.referral_slots : j.referralSlots,
+      })) as Job[];
       set({
         jobs: allJobs.filter((j) => j.status !== 'draft'),
         draftJobs: allJobs.filter((j) => j.status === 'draft'),
@@ -132,7 +145,10 @@ export const useRecruiterStore = create<RecruiterStore>((set, get) => ({
   deleteJob: async (jobId) => {
     try {
       await recruiterApi.deleteJob(jobId);
-      set((state) => ({ jobs: state.jobs.filter((j) => j.id !== jobId) }));
+      set((state) => ({
+        jobs: state.jobs.filter((j) => j.id !== jobId),
+        draftJobs: state.draftJobs.filter((j) => j.id !== jobId),
+      }));
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err?.message };

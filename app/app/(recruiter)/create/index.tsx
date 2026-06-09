@@ -6,14 +6,15 @@ import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
+import { ChevronLeft, ChevronRight, Check, CheckCircle2 } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
 import { useRecruiterStore } from '../../../store/recruiter.store';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Chip } from '../../../components/ui/Chip';
+import { DateTimePicker } from '../../../components/ui/DateTimePicker';
 import { JOB_TYPES, POPULAR_SKILLS } from '../../../constants/config';
 import type { CreateJobPayload } from '../../../types/job.types';
 
@@ -44,10 +45,11 @@ export default function CreateJobScreen() {
   const [isRemote, setIsRemote] = useState(false);
   const [referralAvailable, setReferralAvailable] = useState(false);
   const [referralSlots, setReferralSlots] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const { control, handleSubmit, formState: { errors }, trigger } = useForm<FormData>({
+  const { control, handleSubmit, formState: { errors }, trigger, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', companyName: '', description: '', requirements: '', applyLink: '', location: '' },
+    defaultValues: { title: '', companyName: '', description: '', requirements: '', applyLink: '', location: '', salaryMin: '', salaryMax: '', deadline: '' },
   });
 
   const toggleSkill = (skill: string) => {
@@ -81,17 +83,29 @@ export default function CreateJobScreen() {
       location: isRemote ? 'Remote' : data.location,
       isRemote,
       applyLink: data.applyLink,
-      deadline: data.deadline,
+      deadline: data.deadline ? data.deadline : undefined,
       referralAvailable,
       referralSlots: referralAvailable && referralSlots ? parseInt(referralSlots) : 0,
-      companyName: ''
+      companyName: data.companyName
     };
 
     const result = await createJob(user.id, payload);
     if (result.success) {
-      Alert.alert('Posted!', 'Your job has been submitted for review.', [
-        { text: 'View Posts', onPress: () => router.push('/(recruiter)/posts') },
-      ]);
+      setIsSuccess(true);
+      setTimeout(() => {
+        router.push('/(recruiter)/posts');
+        
+        // Reset form completely so it's fresh when user comes back
+        setTimeout(() => {
+          reset();
+          setStep(0);
+          setSelectedSkills([]);
+          setIsRemote(false);
+          setReferralAvailable(false);
+          setReferralSlots('');
+          setIsSuccess(false);
+        }, 500); // Give it a slight delay so navigation completes smoothly first
+      }, 1500);
     } else {
       Alert.alert('Error', result.error ?? 'Failed to post job');
     }
@@ -99,9 +113,49 @@ export default function CreateJobScreen() {
 
   const handleSaveDraft = handleSubmit(async (data) => {
     if (!user) return;
-    await saveDraft(user.id, { title: data.title, description: data.description });
-    Alert.alert('Saved', 'Draft saved successfully.');
+    const payload: CreateJobPayload = {
+      title: data.title,
+      description: data.description,
+      requirements: data.requirements,
+      skills: selectedSkills,
+      jobType: selectedJobType as any,
+      experienceLevel: 'Fresher',
+      salaryMin: data.salaryMin ? parseInt(data.salaryMin) : undefined,
+      salaryMax: data.salaryMax ? parseInt(data.salaryMax) : undefined,
+      location: isRemote ? 'Remote' : data.location,
+      isRemote,
+      applyLink: data.applyLink,
+      deadline: data.deadline ? data.deadline : undefined,
+      referralAvailable,
+      referralSlots: referralAvailable && referralSlots ? parseInt(referralSlots) : 0,
+      companyName: data.companyName
+    };
+    
+    const result = await saveDraft(user.id, payload);
+    if (result.success) {
+      Alert.alert('Saved', 'Draft saved successfully.');
+    } else {
+      Alert.alert('Error', result.error ?? 'Failed to save draft');
+    }
   });
+
+  if (isSuccess) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <Animated.View entering={ZoomIn.duration(500).springify()} style={{ alignItems: 'center' }}>
+          <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: theme.colors.success + '20', justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
+            <CheckCircle2 size={60} color={theme.colors.success} />
+          </View>
+          <Text style={{ fontSize: 24, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold, marginBottom: 8 }}>
+            Job Posted Successfully!
+          </Text>
+          <Text style={{ fontSize: 16, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, textAlign: 'center', paddingHorizontal: 40 }}>
+            Redirecting to your posts...
+          </Text>
+        </Animated.View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
@@ -229,7 +283,7 @@ export default function CreateJobScreen() {
                 )} />
               </View>
               <Controller control={control} name="deadline" render={({ field: { value, onChange } }) => (
-                <Input label="Application Deadline & Time (optional)" placeholder="YYYY-MM-DD HH:mm (e.g. 2024-12-31 23:59)" value={value} onChangeText={onChange} />
+                <DateTimePicker label="Application Deadline (optional)" value={value || ''} onChangeText={onChange} error={errors.deadline?.message} />
               )} />
             </Animated.View>
           )}
@@ -237,32 +291,9 @@ export default function CreateJobScreen() {
           {/* Step 3: Location */}
           {step === 3 && (
             <Animated.View entering={FadeInRight.duration(300)} style={styles.stepContent}>
-              <Chip
-                label="🌐 This is a Remote Job"
-                selected={isRemote}
-                onPress={() => setIsRemote((v) => !v)}
-                style={{ marginBottom: 16, alignSelf: 'flex-start' }}
-              />
-              <Chip
-                label="🤝 Referral Available"
-                selected={referralAvailable}
-                onPress={() => setReferralAvailable((v) => !v)}
-                style={{ marginBottom: 16, alignSelf: 'flex-start' }}
-              />
-              {referralAvailable && (
-                <Input
-                  label="Referral Slots"
-                  placeholder="e.g. 5"
-                  keyboardType="numeric"
-                  value={referralSlots}
-                  onChangeText={setReferralSlots}
-                />
-              )}
-              {!isRemote && (
-                <Controller control={control} name="location" render={({ field: { value, onChange, onBlur } }) => (
-                  <Input label="Location" placeholder="City, State" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.location?.message} />
-                )} />
-              )}
+              <Controller control={control} name="location" render={({ field: { value, onChange, onBlur } }) => (
+                <Input label="Location" placeholder="City, State" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.location?.message} />
+              )} />
               <Controller control={control} name="applyLink" render={({ field: { value, onChange, onBlur } }) => (
                 <Input label="Apply Link / Form URL" placeholder="https://..." keyboardType="url" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.applyLink?.message} />
               )} />

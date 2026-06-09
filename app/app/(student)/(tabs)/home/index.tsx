@@ -38,7 +38,8 @@ export default function StudentHomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchJobs();
+    // Default home page to show jobs posted today that match user skills
+    fetchJobs({ datePosted: '24h', matchUserSkills: true }, true);
     fetchRecommendedJobs();
     if (user) {
       // fetchProfile(user.id) // would be here
@@ -48,7 +49,7 @@ export default function StudentHomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
-      fetchJobs(undefined, true),
+      fetchJobs({ datePosted: '24h', matchUserSkills: true }, true),
       fetchRecommendedJobs()
     ]);
     setRefreshing(false);
@@ -56,12 +57,16 @@ export default function StudentHomeScreen() {
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
-    fetchJobs({ keyword: text || undefined }, true);
+    fetchJobs({ keyword: text || undefined, datePosted: '24h', matchUserSkills: true }, true);
   }, []);
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
-    fetchJobs({ jobType: filter === 'All' ? undefined : filter as any }, true);
+    fetchJobs({ 
+      jobType: filter === 'All' ? undefined : filter as any,
+      datePosted: '24h', 
+      matchUserSkills: true 
+    }, true);
   };
 
   const handleSaveToggle = (jobId: string, isSaved: boolean) => {
@@ -87,7 +92,12 @@ export default function StudentHomeScreen() {
 
   const applyAdvancedFilters = () => {
     setShowFilters(false);
-    fetchJobs({ datePosted: datePosted === 'all' ? undefined : datePosted, sortBy }, true);
+    // Keep matchUserSkills: true so the user only sees relevant jobs
+    fetchJobs({ 
+      datePosted: datePosted === 'all' ? undefined : datePosted, 
+      sortBy,
+      matchUserSkills: true
+    }, true);
   };
 
   const renderHeader = () => (

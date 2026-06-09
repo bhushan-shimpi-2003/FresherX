@@ -77,7 +77,8 @@ router.get('/', requireAuth, async (req, res) => {
         // We will do this by chaining .or() 
         const orConditions = [];
         if (profile.skills && profile.skills.length > 0) {
-          orConditions.push(`skills.cs.{${profile.skills.join(',')}}`);
+          // .ov means overlap, meaning at least ONE skill matches
+          orConditions.push(`skills.ov.{${profile.skills.join(',')}}`);
         }
         if (profile.preferred_roles && profile.preferred_roles.length > 0) {
           // Construct ILIKE conditions for each role against the title

@@ -43,6 +43,7 @@ router.put('/', async (req, res) => {
       preferred_salary_min: updates.preferredSalaryMin,
       preferred_roles: updates.preferredRoles,
       onboarding_complete: updates.onboardingComplete,
+      resume_data: updates.resumeData,
     };
 
     // Remove undefined keys

@@ -42,5 +42,6 @@ function mapProfile(raw: any): StudentProfile {
     emailNotifications: raw.email_notifications ?? true,
     profileComplete: raw.profile_complete ?? false,
     location: raw.location ?? '',
+    resumeData: raw.resume_data,
   };
 }

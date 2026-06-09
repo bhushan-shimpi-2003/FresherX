@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, Edit, Trash2, Users, Eye } from 'lucide-react-native';
@@ -23,23 +23,37 @@ export default function RecruiterJobDetailScreen() {
   }, [id, jobs]);
 
   const handleDelete = () => {
-    Alert.alert('Delete Job Post', 'Are you sure you want to delete this job post? This action cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          if (!id) return;
-          try {
-            await deleteJob(id);
+    if (Platform.OS === 'web') {
+      const confirmDelete = window.confirm('Are you sure you want to delete this job post? This action cannot be undone.');
+      if (confirmDelete && id) {
+        deleteJob(id).then((res) => {
+          if (!res.success) {
+            window.alert('Failed to delete job.');
+          } else {
             router.back();
-          } catch (error) {
-            console.error(error);
-            Alert.alert('Error', 'Failed to delete job.');
           }
+        });
+      }
+    } else {
+      Alert.alert('Delete Job Post', 'Are you sure you want to delete this job post? This action cannot be undone.', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (!id) return;
+            try {
+              const res = await deleteJob(id);
+              if (!res.success) throw new Error();
+              router.back();
+            } catch (error) {
+              console.error(error);
+              Alert.alert('Error', 'Failed to delete job.');
+            }
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   if (!job) {

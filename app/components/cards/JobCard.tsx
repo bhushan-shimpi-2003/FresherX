@@ -75,8 +75,8 @@ export function JobCard({ job, onPress, onSave, index = 0, variant = 'default' }
             </Text>
             {((job.skills?.length ?? 0) > 0) && (
               <View style={styles.compactSkills}>
-                {(job.skills || []).slice(0, 2).map((skill) => (
-                  <View key={skill} style={[styles.compactSkillBadge, { backgroundColor: theme.colors.background }]}>
+                {(job.skills || []).slice(0, 2).map((skill, idx) => (
+                  <View key={idx} style={[styles.compactSkillBadge, { backgroundColor: theme.colors.background }]}>
                     <Text style={{ color: theme.colors.textSecondary, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}>{skill}</Text>
                   </View>
                 ))}
@@ -182,8 +182,8 @@ export function JobCard({ job, onPress, onSave, index = 0, variant = 'default' }
             {job.referralAvailable && (
               <Badge label="🤝 Referral Available" variant="primary" size="sm" />
             )}
-            {(job.skills || []).slice(0, job.referralAvailable ? 2 : 3).map((skill) => (
-              <Badge key={skill} label={skill} variant="default" size="sm" />
+            {(job.skills || []).slice(0, job.referralAvailable ? 2 : 3).map((skill, idx) => (
+              <Badge key={idx} label={skill} variant="default" size="sm" />
             ))}
             {(job.skills?.length ?? 0) > (job.referralAvailable ? 2 : 3) && (
               <Badge label={`+${(job.skills?.length ?? 0) - (job.referralAvailable ? 2 : 3)}`} variant="default" size="sm" />
