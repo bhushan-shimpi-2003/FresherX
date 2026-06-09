@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert, Platform
 } from 'react-native';
@@ -17,7 +17,10 @@ import { useSettingsStore } from '../../../../store/settings.store';
 import { Avatar } from '../../../../components/ui/Avatar';
 import { Badge } from '../../../../components/ui/Badge';
 import { Button } from '../../../../components/ui/Button';
+import { Input } from '../../../../components/ui/Input';
+import { BottomSheetModal, BottomSheetRef } from '../../../../components/ui/BottomSheet';
 import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
+import { authApi } from '../../../../services/api/auth.api';
 import { calculateProfileCompleteness } from '../../../../utils/profileScorer';
 
 export default function StudentProfileScreen() {
@@ -26,6 +29,12 @@ export default function StudentProfileScreen() {
   const { user, logout } = useAuthStore();
   const { profile, fetchProfile } = useUserStore();
   const { themeMode, notificationsEnabled, setThemeMode, setNotificationsEnabled } = useSettingsStore();
+
+  const bottomSheetRef = useRef<BottomSheetRef>(null);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
     if (user) fetchProfile(user.id);
@@ -41,6 +50,34 @@ export default function StudentProfileScreen() {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Log out', style: 'destructive', onPress: logout },
       ]);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      setPasswordError('Please fill in both fields');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+    try {
+      setIsChangingPassword(true);
+      setPasswordError('');
+      await authApi.changePassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      bottomSheetRef.current?.dismiss();
+      if (Platform.OS === 'web') {
+        window.alert('Password successfully updated!');
+      } else {
+        Alert.alert('Success', 'Password successfully updated!');
+      }
+    } catch (err: any) {
+      setPasswordError(err.message || 'Failed to update password');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -179,23 +216,15 @@ export default function StudentProfileScreen() {
             ACCOUNT
           </Text>
           <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-            {[
-              { Icon: Shield, label: 'Privacy Policy', color: theme.colors.info },
-              { Icon: Globe, label: 'Language', color: theme.colors.accent },
-            ].map(({ Icon, label, color }, i) => (
-              <React.Fragment key={label}>
-                <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
-                  <View style={[styles.iconWrap, { backgroundColor: color + '20' }]}>
-                    <Icon size={18} color={color} />
-                  </View>
-                  <Text style={[styles.settingLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium, flex: 1 }]}>
-                    {label}
-                  </Text>
-                  <ChevronRight size={16} color={theme.colors.textMuted} />
-                </TouchableOpacity>
-                {i < 1 && <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />}
-              </React.Fragment>
-            ))}
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => { setPasswordError(''); bottomSheetRef.current?.present(); }}>
+              <View style={[styles.iconWrap, { backgroundColor: theme.colors.info + '20' }]}>
+                <Shield size={18} color={theme.colors.info} />
+              </View>
+              <Text style={[styles.settingLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium, flex: 1 }]}>
+                Change Password
+              </Text>
+              <ChevronRight size={16} color={theme.colors.textMuted} />
+            </TouchableOpacity>
           </View>
         </Animated.View>
 
@@ -215,6 +244,33 @@ export default function StudentProfileScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Change Password Modal */}
+      <BottomSheetModal ref={bottomSheetRef} snapPoints={['60%']} title="Change Password">
+        <View style={{ gap: 16, marginTop: 16 }}>
+          <Input
+            label="Current Password"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            placeholder="Enter current password"
+            secureTextEntry
+          />
+          <Input
+            label="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            placeholder="Enter new password (min 6 characters)"
+            secureTextEntry
+            error={passwordError}
+          />
+          <Button
+            label="Save New Password"
+            onPress={handleChangePassword}
+            loading={isChangingPassword}
+            style={{ marginTop: 8 }}
+          />
+        </View>
+      </BottomSheetModal>
     </SafeAreaView>
   );
 }

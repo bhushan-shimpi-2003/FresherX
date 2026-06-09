@@ -78,23 +78,21 @@ router.post('/jobs', async (req, res) => {
     if (error) throw error;
 
     if (initialStatus === 'published') {
-      // Auto-verified: trigger student matching immediately
-      if (payload.skills && payload.skills.length > 0) {
-        const { data: matchingStudents } = await supabaseAdmin
-          .from('student_profiles')
-          .select('user_id')
-          .overlaps('skills', payload.skills);
+      // Auto-verified: trigger notification to all students immediately
+      const { data: allStudents } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('role', 'student');
 
-        if (matchingStudents && matchingStudents.length > 0) {
-          const notifications = matchingStudents.map(student => ({
-            user_id: student.user_id,
-            title: 'New Matching Job!',
-            body: `${payload.companyName || 'A company'} just posted a new job: ${payload.title} that matches your skills. Apply fast!`,
-            type: 'job_alert',
-            data: { job_id: data.id }
-          }));
-          await supabaseAdmin.from('notifications').insert(notifications);
-        }
+      if (allStudents && allStudents.length > 0) {
+        const notifications = allStudents.map(student => ({
+          user_id: student.id,
+          title: 'New Job Posted!',
+          body: `${payload.companyName || 'A company'} just posted a new job: ${payload.title}. Check it out!`,
+          type: 'new_job',
+          data: { job_id: data.id }
+        }));
+        await supabaseAdmin.from('notifications').insert(notifications);
       }
     } else {
       // Pending: Send notification to all admins for verification
@@ -238,6 +236,7 @@ router.get('/stats', async (req, res) => {
       { data: viewData },
       { data: appData },
       { data: jobsData },
+      { count: thisWeekJobs },
     ] = await Promise.all([
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId),
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).eq('status', 'published'),
@@ -245,6 +244,7 @@ router.get('/stats', async (req, res) => {
       supabaseAdmin.from('jobs').select('views').eq('recruiter_id', userId),
       supabaseAdmin.from('jobs').select('applications').eq('recruiter_id', userId),
       supabaseAdmin.from('jobs').select('id').eq('recruiter_id', userId),
+      supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
     ]);
 
     const totalViews = (viewData ?? []).reduce((sum: number, j: any) => sum + (j.views ?? 0), 0);
@@ -287,7 +287,7 @@ router.get('/stats', async (req, res) => {
       pendingJobs: pendingJobs ?? 0,
       totalViews,
       totalApplications,
-      thisWeekJobs: 0,
+      thisWeekJobs: thisWeekJobs ?? 0,
       applicationsChart,
     });
   } catch (error: any) {

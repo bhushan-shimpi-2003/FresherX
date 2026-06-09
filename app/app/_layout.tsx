@@ -18,12 +18,15 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider } from '../theme';
 import { useAuthStore } from '../store/auth.store';
 import { useSettingsStore } from '../store/settings.store';
+import { useNotificationsStore } from '../store/notifications.store';
+import { BottomSheetModalProvider } from '../components/ui/BottomSheet';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const { initialize, status, user } = useAuthStore();
   const { themeMode, loadSettings } = useSettingsStore();
+  const { fetchNotifications, subscribeToNotifications, unsubscribeFromNotifications } = useNotificationsStore();
   const router = useRouter();
   const segments = useSegments();
   const pathname = usePathname();
@@ -96,6 +99,18 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, status, user, segments, pathname]);
 
+  // Global notification subscription
+  useEffect(() => {
+    if (user && status === 'authenticated') {
+      fetchNotifications(user.id);
+      subscribeToNotifications(user.id);
+      
+      return () => {
+        unsubscribeFromNotifications();
+      };
+    }
+  }, [user, status]);
+
   if (!fontsLoaded) return null;
 
   const themeOverride = themeMode === 'system' ? null : themeMode;
@@ -104,14 +119,16 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ThemeProvider override={themeOverride}>
-          <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
-          <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(student)" />
-            <Stack.Screen name="(recruiter)" />
-            <Stack.Screen name="(admin)" />
-          </Stack>
+          <BottomSheetModalProvider>
+            <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
+            <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(student)" />
+              <Stack.Screen name="(recruiter)" />
+              <Stack.Screen name="(admin)" />
+            </Stack>
+          </BottomSheetModalProvider>
         </ThemeProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

@@ -19,7 +19,7 @@ import { useAuthStore } from '../../../store/auth.store';
 export default function AdminDashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { stats, activities, isLoading, fetchDashboardStats, fetchActivities } = useAdminStore();
 
   useEffect(() => { 
@@ -33,7 +33,6 @@ export default function AdminDashboardScreen() {
     { label: 'Manage Users', value: stats?.totalStudents ?? 0, route: '/(admin)/users', Icon: Users, color: theme.colors.textSecondary, urgent: false },
     { label: 'Verify Recruiters', value: stats?.pendingRecruiters ?? 0, route: '/(admin)/verify', Icon: Shield, color: theme.colors.primary, urgent: (stats?.pendingRecruiters ?? 0) > 0 },
     { label: 'Review Jobs', value: stats?.pendingJobs ?? 0, route: '/(admin)/jobs', Icon: Briefcase, color: theme.colors.warning, urgent: (stats?.pendingJobs ?? 0) > 0 },
-    { label: 'Reports', value: stats?.totalReports ?? 0, route: '/(admin)/reports', Icon: AlertTriangle, color: theme.colors.error, urgent: (stats?.totalReports ?? 0) > 0 },
   ];
 
   const platformStats = [
@@ -173,17 +172,7 @@ export default function AdminDashboardScreen() {
           </View>
         </Animated.View>
 
-        {/* Logout */}
-        <Animated.View entering={FadeInDown.delay(250).springify()} style={{ paddingHorizontal: 16, marginBottom: 40 }}>
-          <TouchableOpacity
-            onPress={logout}
-            style={[styles.logoutBtn, { backgroundColor: theme.colors.errorBg, borderColor: theme.colors.error + '30' }]}
-          >
-            <Text style={[styles.logoutText, { color: theme.colors.error, fontFamily: theme.typography.fontFamily.semiBold }]}>
-              Log Out
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -219,6 +208,4 @@ const styles = StyleSheet.create({
   activityInfo: { flex: 1 },
   activityTitle: { fontSize: 14 },
   activityTime: { fontSize: 12, marginTop: 2 },
-  logoutBtn: { padding: 16, borderRadius: 16, borderWidth: 1, alignItems: 'center' },
-  logoutText: { fontSize: 16 },
 });

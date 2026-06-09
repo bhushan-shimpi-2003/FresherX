@@ -52,6 +52,97 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+router.get('/analytics', async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const isoDate = sevenDaysAgo.toISOString();
+
+    const [
+      { data: recentProfiles },
+      { data: recentJobs },
+      { data: allSkills },
+      { data: companiesData },
+      { data: recentApps }
+    ] = await Promise.all([
+      supabaseAdmin.from('profiles').select('created_at, role').gte('created_at', isoDate),
+      supabaseAdmin.from('jobs').select('created_at').gte('created_at', isoDate),
+      supabaseAdmin.from('student_profiles').select('skills'),
+      supabaseAdmin.from('jobs').select('applications, company_name'),
+      supabaseAdmin.from('applications').select('created_at').gte('created_at', isoDate),
+    ]);
+
+    // 1. Growth Data
+    const growthData = Array(7).fill(0).map((_, i) => {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i);
+      return { date: d.toLocaleDateString('en-US', { weekday: 'short' }), students: 0, recruiters: 0, jobs: 0 };
+    });
+
+    (recentProfiles || []).forEach((p: any) => {
+      const dStr = new Date(p.created_at).toLocaleDateString('en-US', { weekday: 'short' });
+      const day = growthData.find(d => d.date === dStr);
+      if (day) {
+        if (p.role === 'student') day.students++;
+        if (p.role === 'recruiter') day.recruiters++;
+      }
+    });
+
+    (recentJobs || []).forEach((j: any) => {
+      const dStr = new Date(j.created_at).toLocaleDateString('en-US', { weekday: 'short' });
+      const day = growthData.find(d => d.date === dStr);
+      if (day) day.jobs++;
+    });
+
+    // 2. Top Skills
+    const skillCounts: Record<string, number> = {};
+    (allSkills || []).forEach((p: any) => {
+      (p.skills || []).forEach((s: string) => {
+        skillCounts[s] = (skillCounts[s] || 0) + 1;
+      });
+    });
+    const topSkills = Object.entries(skillCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([skill, count]) => ({ skill, count }));
+
+    // 3. Top Companies
+    const companyStats: Record<string, { jobs: number; applications: number }> = {};
+    (companiesData || []).forEach((j: any) => {
+      const name = j.company_name || 'Unknown';
+      if (!companyStats[name]) companyStats[name] = { jobs: 0, applications: 0 };
+      companyStats[name].jobs++;
+      companyStats[name].applications += (j.applications || 0);
+    });
+    const topCompanies = Object.entries(companyStats)
+      .sort((a, b) => b[1].jobs - a[1].jobs)
+      .slice(0, 5)
+      .map(([name, stats]) => ({ name, ...stats }));
+
+    // 4. Application Stats
+    const applicationStats = Array(7).fill(0).map((_, i) => {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i);
+      return { date: d.toLocaleDateString('en-US', { weekday: 'short' }), count: 0 };
+    });
+    (recentApps || []).forEach((a: any) => {
+      const dStr = new Date(a.created_at).toLocaleDateString('en-US', { weekday: 'short' });
+      const day = applicationStats.find(d => d.date === dStr);
+      if (day) day.count++;
+    });
+
+    res.json({
+      growthData,
+      topSkills,
+      topCompanies,
+      applicationStats,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get('/recruiters', async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
@@ -81,6 +172,15 @@ router.post('/recruiters/:id/verify', async (req, res) => {
       .eq('id', id);
 
     if (error) throw error;
+
+    // Notify recruiter
+    await supabaseAdmin.from('notifications').insert([{
+      user_id: id,
+      title: 'Profile Verification',
+      body: `Your recruiter profile has been ${action === 'approve' ? 'verified' : 'rejected'}.${note ? ` Note: ${note}` : ''}`,
+      type: 'system'
+    }]);
+
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -118,28 +218,56 @@ router.post('/jobs/:id/review', async (req, res) => {
       // Fetch the job details
       const { data: job } = await supabaseAdmin
         .from('jobs')
-        .select('title, company_name, skills')
+        .select('title, company_name, skills, recruiter_id')
         .eq('id', id)
         .single();
         
-      if (job && job.skills && job.skills.length > 0) {
-        // Find students whose skills overlap with job skills
-        const { data: matchingStudents } = await supabaseAdmin
-          .from('student_profiles')
-          .select('user_id')
-          .overlaps('skills', job.skills);
+      if (job) {
+        // Find all students to notify them about the new job
+        const { data: allStudents } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('role', 'student');
 
-        if (matchingStudents && matchingStudents.length > 0) {
-          const notifications = matchingStudents.map(student => ({
-            user_id: student.user_id,
-            title: 'New Matching Job!',
-            body: `${job.company_name || 'A company'} just posted a new job: ${job.title} that matches your skills. Apply fast!`,
-            type: 'job_alert',
+        if (allStudents && allStudents.length > 0) {
+          const notifications = allStudents.map(student => ({
+            user_id: student.id,
+            title: 'New Job Posted!',
+            body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
+            type: 'new_job',
             data: { job_id: id }
           }));
           // Insert notifications in batches if needed, but for now we do it in one go
           await supabaseAdmin.from('notifications').insert(notifications);
         }
+      }
+
+      // Notify recruiter of approval
+      if (job?.recruiter_id) {
+        await supabaseAdmin.from('notifications').insert([{
+          user_id: job.recruiter_id,
+          title: 'Job Approved',
+          body: `Your job posting '${job.title}' has been approved and is now live.`,
+          type: 'system',
+          data: { job_id: id }
+        }]);
+      }
+    } else {
+      // If rejected/spam, notify recruiter
+      const { data: job } = await supabaseAdmin
+        .from('jobs')
+        .select('title, recruiter_id')
+        .eq('id', id)
+        .single();
+
+      if (job?.recruiter_id) {
+        await supabaseAdmin.from('notifications').insert([{
+          user_id: job.recruiter_id,
+          title: 'Job Review Update',
+          body: `Your job posting '${job.title}' has been ${statusMap[action]}.${reason ? ` Reason: ${reason}` : ''}`,
+          type: 'system',
+          data: { job_id: id }
+        }]);
       }
     }
     res.json({ success: true });
@@ -171,6 +299,26 @@ router.put('/jobs/:id', async (req, res) => {
     const { error } = await supabaseAdmin
       .from('jobs')
       .update(updateData)
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete('/jobs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Also delete associated applications and saved jobs
+    await supabaseAdmin.from('applied_jobs').delete().eq('job_id', id);
+    await supabaseAdmin.from('saved_jobs').delete().eq('job_id', id);
+    
+    const { error } = await supabaseAdmin
+      .from('jobs')
+      .delete()
       .eq('id', id);
 
     if (error) throw error;
@@ -291,6 +439,78 @@ router.get('/activities', async (req, res) => {
     res.json(activities.slice(0, 10));
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// CSV EXPORT ROUTES
+// ==========================================
+
+const escapeCSV = (str: any) => `"${String(str || '').replace(/"/g, '""')}"`;
+
+router.get('/export/users', async (req, res) => {
+  try {
+    const { data: profiles, error } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    let csvContent = 'ID,Email,Full Name,Role,Created At\n';
+    
+    profiles?.forEach(p => {
+      csvContent += [
+        escapeCSV(p.id),
+        escapeCSV(p.email),
+        escapeCSV(p.full_name),
+        escapeCSV(p.role),
+        escapeCSV(p.created_at)
+      ].join(',') + '\n';
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="users_export.csv"');
+    res.send(csvContent);
+  } catch (error: any) {
+    console.error('Export Users Error:', error);
+    res.status(500).json({ error: 'Failed to export users data' });
+  }
+});
+
+router.get('/export/jobs', async (req, res) => {
+  try {
+    // We join the jobs with their creator's profile if possible
+    const { data: jobs, error } = await supabaseAdmin
+      .from('jobs')
+      .select('*, recruiter:recruiter_id(full_name)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    let csvContent = 'ID,Title,Company,Type,Status,Recruiter,Created At\n';
+    
+    jobs?.forEach((j: any) => {
+      const companyName = j.company?.name || 'Unknown';
+      const recruiterName = j.recruiter?.full_name || 'Unknown';
+      
+      csvContent += [
+        escapeCSV(j.id),
+        escapeCSV(j.title),
+        escapeCSV(companyName),
+        escapeCSV(j.job_type),
+        escapeCSV(j.status),
+        escapeCSV(recruiterName),
+        escapeCSV(j.created_at)
+      ].join(',') + '\n';
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="jobs_export.csv"');
+    res.send(csvContent);
+  } catch (error: any) {
+    console.error('Export Jobs Error:', error);
+    res.status(500).json({ error: 'Failed to export jobs data' });
   }
 });
 

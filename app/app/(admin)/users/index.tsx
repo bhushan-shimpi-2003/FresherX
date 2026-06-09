@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Platform } from 'react-native';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, MoreVertical, Ban, Mail, Search, Shield, Filter, Zap } from 'lucide-react-native';
@@ -11,8 +11,10 @@ import { Loader } from '../../../components/ui/Loader';
 import { Badge } from '../../../components/ui/Badge';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { AdminUser } from '../../../types/admin.types';
+import { BottomSheetModal, BottomSheetRef } from '../../../components/ui/BottomSheet';
 
 type RoleTab = 'all' | 'student' | 'recruiter' | 'admin';
+type TimeFilter = 'all' | '24h' | '7d' | '30d';
 
 export default function AdminUsersScreen() {
   const theme = useTheme();
@@ -21,6 +23,20 @@ export default function AdminUsersScreen() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRole, setActiveRole] = useState<RoleTab>('all');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+
+  const bottomSheetRef = useRef<BottomSheetRef>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+
+  const openOptions = (user: AdminUser) => {
+    setSelectedUser(user);
+    bottomSheetRef.current?.present();
+  };
+
+  const closeOptions = () => {
+    bottomSheetRef.current?.dismiss();
+    setTimeout(() => setSelectedUser(null), 300);
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -80,9 +96,23 @@ export default function AdminUsersScreen() {
       const query = searchQuery.toLowerCase();
       const matchesSearch = user.email.toLowerCase().includes(query) || 
                             (user.fullName?.toLowerCase() || '').includes(query);
-      return matchesRole && matchesSearch;
+      
+      if (!matchesRole || !matchesSearch) return false;
+      
+      if (timeFilter !== 'all') {
+        const userDate = new Date(user.createdAt);
+        const now = new Date();
+        const diffMs = now.getTime() - userDate.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        
+        if (timeFilter === '24h' && diffDays > 1) return false;
+        if (timeFilter === '7d' && diffDays > 7) return false;
+        if (timeFilter === '30d' && diffDays > 30) return false;
+      }
+      
+      return true;
     });
-  }, [users, searchQuery, activeRole]);
+  }, [users, searchQuery, activeRole, timeFilter]);
 
   const roleTabs: { key: RoleTab; label: string }[] = [
     { key: 'all', label: 'All' },
@@ -108,7 +138,7 @@ export default function AdminUsersScreen() {
             <Text style={[styles.email, { color: theme.colors.textMuted }]} numberOfLines={1}>{item.email}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.moreBtn}>
+        <TouchableOpacity style={styles.moreBtn} onPress={() => openOptions(item)}>
           <MoreVertical size={18} color={theme.colors.textSecondary} />
         </TouchableOpacity>
       </View>
@@ -119,29 +149,6 @@ export default function AdminUsersScreen() {
           <Badge label={item.status} variant={item.status === 'active' ? 'success' : 'error'} size="sm" />
           {item.role === 'recruiter' && item.auto_verified && (
             <Badge label="AUTO-VERIFIED" variant="success" size="sm" />
-          )}
-        </View>
-
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {item.role === 'recruiter' && item.status !== 'suspended' && (
-            <TouchableOpacity onPress={() => handleAutoVerify(item.id, item.email, !!item.auto_verified)} style={[styles.suspendBtn, { backgroundColor: item.auto_verified ? theme.colors.warning + '10' : theme.colors.primary + '10', borderColor: item.auto_verified ? theme.colors.warning + '30' : theme.colors.primary + '30' }]}>
-              <Zap size={14} color={item.auto_verified ? theme.colors.warning : theme.colors.primary} />
-              <Text style={[styles.suspendText, { color: item.auto_verified ? theme.colors.warning : theme.colors.primary }]}>{item.auto_verified ? 'Revoke' : 'Auto-Verify'}</Text>
-            </TouchableOpacity>
-          )}
-
-          {item.role !== 'admin' && (
-            item.status !== 'suspended' ? (
-              <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'suspend')} style={[styles.suspendBtn, { backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error + '30' }]}>
-                <Ban size={14} color={theme.colors.error} />
-                <Text style={[styles.suspendText, { color: theme.colors.error }]}>Suspend</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity onPress={() => handleSuspend(item.id, item.email, 'activate')} style={[styles.suspendBtn, { backgroundColor: theme.colors.success + '10', borderColor: theme.colors.success + '30' }]}>
-                <Shield size={14} color={theme.colors.success} />
-                <Text style={[styles.suspendText, { color: theme.colors.success }]}>Reactivate</Text>
-              </TouchableOpacity>
-            )
           )}
         </View>
       </View>
@@ -206,6 +213,28 @@ export default function AdminUsersScreen() {
         />
       </View>
 
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+          <Filter size={16} color={theme.colors.textMuted} style={{ marginRight: 4, alignSelf: 'center' }} />
+          {[
+            { id: 'all', label: 'All Time' },
+            { id: '24h', label: 'Last 24h' },
+            { id: '7d', label: 'Last 7 Days' },
+            { id: '30d', label: 'Last 30 Days' },
+          ].map(f => (
+            <TouchableOpacity
+              key={f.id}
+              style={[styles.filterChip, timeFilter === f.id && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+              onPress={() => setTimeFilter(f.id as TimeFilter)}
+            >
+              <Text style={[styles.filterChipText, timeFilter === f.id && { color: '#FFF', fontFamily: theme.typography.fontFamily.semiBold }]}>
+                {f.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       {isLoading && users.length === 0 ? (
         <Loader fullScreen />
       ) : (
@@ -223,6 +252,64 @@ export default function AdminUsersScreen() {
           }
         />
       )}
+
+      <BottomSheetModal ref={bottomSheetRef} snapPoints={['40%']} title="User Actions">
+        {selectedUser && (
+          <View style={{ gap: 12, marginTop: 12 }}>
+            {selectedUser.role === 'recruiter' && selectedUser.status !== 'suspended' && (
+              <TouchableOpacity 
+                style={[styles.actionBtn, { backgroundColor: selectedUser.auto_verified ? theme.colors.warning + '15' : theme.colors.primary + '15' }]}
+                onPress={() => {
+                  closeOptions();
+                  setTimeout(() => handleAutoVerify(selectedUser.id, selectedUser.email, !!selectedUser.auto_verified), Platform.OS === 'web' ? 0 : 400);
+                }}
+              >
+                <Zap size={22} color={selectedUser.auto_verified ? theme.colors.warning : theme.colors.primary} />
+                <View>
+                  <Text style={[styles.actionTitle, { color: selectedUser.auto_verified ? theme.colors.warning : theme.colors.primary }]}>
+                    {selectedUser.auto_verified ? 'Revoke Auto-Verify' : 'Grant Auto-Verify'}
+                  </Text>
+                  <Text style={[styles.actionSub, { color: theme.colors.textMuted }]}>
+                    {selectedUser.auto_verified ? 'Require manual approval for jobs' : 'Allow jobs to go live instantly'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {selectedUser.role !== 'admin' && (
+              selectedUser.status !== 'suspended' ? (
+                <TouchableOpacity 
+                  style={[styles.actionBtn, { backgroundColor: theme.colors.error + '15' }]}
+                  onPress={() => {
+                    closeOptions();
+                    setTimeout(() => handleSuspend(selectedUser.id, selectedUser.email, 'suspend'), Platform.OS === 'web' ? 0 : 400);
+                  }}
+                >
+                  <Ban size={22} color={theme.colors.error} />
+                  <View>
+                    <Text style={[styles.actionTitle, { color: theme.colors.error }]}>Suspend Account</Text>
+                    <Text style={[styles.actionSub, { color: theme.colors.textMuted }]}>Prevent user from logging in</Text>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity 
+                  style={[styles.actionBtn, { backgroundColor: theme.colors.success + '15' }]}
+                  onPress={() => {
+                    closeOptions();
+                    setTimeout(() => handleSuspend(selectedUser.id, selectedUser.email, 'activate'), Platform.OS === 'web' ? 0 : 400);
+                  }}
+                >
+                  <Shield size={22} color={theme.colors.success} />
+                  <View>
+                    <Text style={[styles.actionTitle, { color: theme.colors.success }]}>Reactivate Account</Text>
+                    <Text style={[styles.actionSub, { color: theme.colors.textMuted }]}>Restore user access</Text>
+                  </View>
+                </TouchableOpacity>
+              )
+            )}
+          </View>
+        )}
+      </BottomSheetModal>
     </SafeAreaView>
   );
 }
@@ -235,10 +322,14 @@ const styles = StyleSheet.create({
   searchSection: { paddingHorizontal: 16, marginBottom: 12 },
   searchBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 16, borderWidth: 1 },
   searchInput: { flex: 1, fontSize: 14 },
-  filterContainer: { marginBottom: 8 },
+  filterContainer: { marginBottom: 12 },
   filterList: { paddingHorizontal: 16, gap: 8 },
   filterPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
   filterPillText: { fontSize: 13 },
+  tabText: { fontSize: 13, textTransform: 'capitalize' },
+  filterScroll: { paddingHorizontal: 16, alignItems: 'center', gap: 8 },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FFF' },
+  filterChipText: { fontSize: 12, color: '#6B7280', fontFamily: 'Inter_500Medium' },
   list: { padding: 16, gap: 12, paddingBottom: 40 },
   card: { padding: 16, borderRadius: 20, borderWidth: 1, gap: 16 },
   userInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -248,8 +339,9 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   email: { fontSize: 13 },
   moreBtn: { padding: 4 },
-  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
-  badges: { flexDirection: 'row', gap: 8 },
-  suspendBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1 },
-  suspendText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+  footerRow: { flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' },
+  badges: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16, borderRadius: 16 },
+  actionTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', marginBottom: 2 },
+  actionSub: { fontSize: 13 },
 });

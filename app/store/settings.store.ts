@@ -9,10 +9,20 @@ interface SettingsStore {
   emailNotifications: boolean;
   language: string;
 
+  // Admin Configs
+  autoVerifyDomains: boolean;
+  autoApproveJobs: boolean;
+  maintenanceMode: boolean;
+
   setThemeMode: (mode: ThemeMode) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
   setEmailNotifications: (enabled: boolean) => void;
   setLanguage: (lang: string) => void;
+  
+  setAutoVerifyDomains: (enabled: boolean) => void;
+  setAutoApproveJobs: (enabled: boolean) => void;
+  setMaintenanceMode: (enabled: boolean) => void;
+
   loadSettings: () => Promise<void>;
   saveSettings: () => Promise<void>;
 }
@@ -22,6 +32,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   notificationsEnabled: true,
   emailNotifications: true,
   language: 'en',
+  autoVerifyDomains: false,
+  autoApproveJobs: false,
+  maintenanceMode: false,
 
   setThemeMode: (mode) => {
     set({ themeMode: mode });
@@ -39,6 +52,18 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ language: lang });
     get().saveSettings();
   },
+  setAutoVerifyDomains: (enabled) => {
+    set({ autoVerifyDomains: enabled });
+    get().saveSettings();
+  },
+  setAutoApproveJobs: (enabled) => {
+    set({ autoApproveJobs: enabled });
+    get().saveSettings();
+  },
+  setMaintenanceMode: (enabled) => {
+    set({ maintenanceMode: enabled });
+    get().saveSettings();
+  },
 
   loadSettings: async () => {
     const saved = await storage.get<Partial<SettingsStore>>(STORAGE_KEYS.THEME);
@@ -48,14 +73,21 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         notificationsEnabled: saved.notificationsEnabled ?? true,
         emailNotifications: saved.emailNotifications ?? true,
         language: saved.language ?? 'en',
+        autoVerifyDomains: saved.autoVerifyDomains ?? false,
+        autoApproveJobs: saved.autoApproveJobs ?? false,
+        maintenanceMode: saved.maintenanceMode ?? false,
       });
     }
   },
 
   saveSettings: async () => {
-    const { themeMode, notificationsEnabled, emailNotifications, language } = get();
+    const { 
+      themeMode, notificationsEnabled, emailNotifications, language,
+      autoVerifyDomains, autoApproveJobs, maintenanceMode 
+    } = get();
     await storage.set(STORAGE_KEYS.THEME, {
       themeMode, notificationsEnabled, emailNotifications, language,
+      autoVerifyDomains, autoApproveJobs, maintenanceMode
     });
   },
 }));

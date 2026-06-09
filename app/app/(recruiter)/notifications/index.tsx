@@ -14,17 +14,8 @@ import { Bell, CheckCheck } from 'lucide-react-native';
 export default function RecruiterNotificationsScreen() {
   const theme = useTheme();
   const { user } = useAuthStore();
-  const { notifications, isLoading, unreadCount, fetchNotifications, markAsRead, markAllAsRead, subscribeToNotifications, unsubscribeFromNotifications } = useNotificationsStore();
+  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead } = useNotificationsStore();
   const [filter, setFilter] = React.useState<string>('all');
-
-  useEffect(() => {
-    if (user) {
-      fetchNotifications(user.id);
-      subscribeToNotifications(user.id);
-      
-      return () => unsubscribeFromNotifications();
-    }
-  }, [user]);
 
   const filteredNotifications = React.useMemo(() => {
     if (filter === 'all') return notifications;

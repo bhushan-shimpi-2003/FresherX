@@ -25,6 +25,7 @@ export interface PendingRecruiter {
 }
 
 export interface AdminJob {
+  company: any;
   id: string;
   title: string;
   status: string;

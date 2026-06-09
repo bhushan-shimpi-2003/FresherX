@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '../config/supabase';
+import { requireAuth } from '../middleware/auth';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_for_fresherx_change_me';
@@ -151,6 +152,61 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login Exception:', err);
     res.status(500).json({ error: 'Internal server error during login' });
+  }
+});
+
+// ==========================================
+// UPDATE PASSWORD ROUTE
+// ==========================================
+router.put('/update-password', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    // 1. Fetch current profile
+    const { data: profile, error } = await supabaseAdmin
+      .from('profiles')
+      .select('password_hash')
+      .eq('id', userId)
+      .single();
+
+    if (error || !profile) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // 2. Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, profile.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    // 3. Hash new password
+    const saltRounds = 10;
+    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+
+    // 4. Update password
+    const { error: updateError } = await supabaseAdmin
+      .from('profiles')
+      .update({ password_hash: newPasswordHash })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Password Update Error:', updateError);
+      return res.status(500).json({ error: 'Failed to update password' });
+    }
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Update Password Exception:', err);
+    res.status(500).json({ error: 'Internal server error during password update' });
   }
 });
 
