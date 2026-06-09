@@ -1,6 +1,7 @@
 // TypeScript types for Users (Student Profile)
 
 export interface StudentProfile {
+  location: string;
   id: string;
   userId: string;
   fullName: string;

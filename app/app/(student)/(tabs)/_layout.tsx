@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, Bookmark, Briefcase, Bell, User, MessageSquare } from 'lucide-react-native';
+import { Home, Bookmark, Briefcase, Bell, User, MessageSquare, FileText } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import { useNotificationsStore } from '../../../store/notifications.store';
 import { View, Text, StyleSheet, Platform } from 'react-native';
@@ -63,6 +63,13 @@ export default function StudentTabsLayout() {
         options={{
           title: 'Saved',
           tabBarIcon: ({ color, focused }) => <TabIcon Icon={Bookmark} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="resume/index"
+        options={{
+          title: 'Resume',
+          tabBarIcon: ({ color, focused }) => <TabIcon Icon={FileText} color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
