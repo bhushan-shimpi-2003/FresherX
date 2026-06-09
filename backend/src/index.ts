@@ -26,6 +26,7 @@ import profileRoutes from './routes/profile';
 import savedRoutes from './routes/saved';
 import notificationRoutes from './routes/notifications';
 import authRoutes from './routes/auth';
+import shareRoutes from './routes/share';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -34,6 +35,7 @@ app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/saved', savedRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/s', shareRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

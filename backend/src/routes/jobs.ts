@@ -7,7 +7,7 @@ const router = Router();
 // Get paginated published jobs
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { keyword, jobType, isRemote, location, salaryMin, page = '0' } = req.query;
+    const { keyword, jobType, isRemote, location, salaryMin, datePosted, sortBy, matchUserSkills, page = '0' } = req.query;
     const PAGE_SIZE = 20;
     const pageNum = parseInt(page as string, 10);
 
@@ -15,14 +15,12 @@ router.get('/', requireAuth, async (req, res) => {
       .from('jobs')
       .select(`
         *,
-        recruiter:profiles(id, full_name, avatar, poster_type)
+        recruiter:profiles(id, full_name, poster_type)
       `)
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
+      .eq('status', 'published');
 
     if (keyword) {
-      query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
+      query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%,company_name.ilike.%${keyword}%,location.ilike.%${keyword}%`);
     }
     if (jobType) {
       const types = (jobType as string).split(',');
@@ -37,6 +35,36 @@ router.get('/', requireAuth, async (req, res) => {
     if (salaryMin) {
       query = query.gte('salary_min', parseInt(salaryMin as string, 10));
     }
+    if (datePosted) {
+      const now = new Date();
+      if (datePosted === '24h') {
+        now.setHours(now.getHours() - 24);
+        query = query.gte('created_at', now.toISOString());
+      } else if (datePosted === '7d') {
+        now.setDate(now.getDate() - 7);
+        query = query.gte('created_at', now.toISOString());
+      }
+    }
+
+    if (matchUserSkills === 'true' && req.user) {
+      const { data: profile } = await supabaseAdmin
+        .from('student_profiles')
+        .select('skills')
+        .eq('id', req.user.id)
+        .single();
+        
+      if (profile && profile.skills && profile.skills.length > 0) {
+        query = query.overlaps('skills', profile.skills);
+      }
+    }
+
+    if (sortBy === 'popular') {
+      query = query.order('views', { ascending: false, nullsFirst: false });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    query = query.range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
 
     const { data, error } = await query;
     
@@ -53,7 +81,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, recruiter:profiles(id, full_name, avatar, poster_type)`)
+      .select(`*, recruiter:profiles(id, full_name, poster_type)`)
       .eq('id', id)
       .single();
 

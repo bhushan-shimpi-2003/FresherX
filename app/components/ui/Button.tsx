@@ -56,14 +56,14 @@ export function Button({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: theme.borderRadius.xl,
+      borderRadius: theme.borderRadius.lg,
       ...(fullWidth ? { width: '100%' } : {}),
     };
 
     const sizeStyles: Record<Size, ViewStyle> = {
-      sm: { paddingHorizontal: 16, paddingVertical: 8, gap: 6 },
-      md: { paddingHorizontal: 24, paddingVertical: 14, gap: 8 },
-      lg: { paddingHorizontal: 32, paddingVertical: 18, gap: 10 },
+      sm: { paddingHorizontal: 16, paddingVertical: 12, gap: 6 },
+      md: { paddingHorizontal: 24, paddingVertical: 18, gap: 8 },
+      lg: { paddingHorizontal: 32, paddingVertical: 22, gap: 10 },
     };
 
     const variantStyles: Record<Variant, ViewStyle> = {

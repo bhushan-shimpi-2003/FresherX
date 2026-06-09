@@ -47,6 +47,11 @@ export const adminApi = {
     await api.post(`/admin/jobs/${jobId}/review`, { action, reason });
   },
 
+  updateJob: async (jobId: string, payload: any) => {
+    const { data } = await api.put(`/admin/jobs/${jobId}`, payload);
+    return data;
+  },
+
   fetchUsers: async (page = 0): Promise<AdminUser[]> => {
     const { data } = await api.get('/admin/users', { params: { page } });
     return data;

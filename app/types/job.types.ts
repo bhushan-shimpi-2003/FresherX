@@ -7,7 +7,9 @@ export type JobStatus = 'draft' | 'pending' | 'published' | 'rejected' | 'archiv
 export interface Job {
   id: string;
   title: string;
+  companyName: string;
   recruiterId: string;
+  recruiter?: { id: string; fullName: string; posterType?: string };
   description: string;
   requirements: string;
   skills: string[];
@@ -42,6 +44,9 @@ export interface JobFilters {
   salaryMin?: number;
   skills?: string[];
   referralAvailable?: boolean;
+  datePosted?: '24h' | '7d' | 'all';
+  sortBy?: 'recent' | 'popular';
+  matchUserSkills?: boolean;
 }
 
 export interface SavedJob {
@@ -59,6 +64,7 @@ export interface JobsPage {
 
 export interface CreateJobPayload {
   title: string;
+  companyName: string;
   description: string;
   requirements: string;
   skills: string[];

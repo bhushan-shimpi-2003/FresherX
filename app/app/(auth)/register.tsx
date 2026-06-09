@@ -8,7 +8,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Eye, EyeOff, Mail, Lock, User, ChevronLeft } from 'lucide-react-native';
+import { Eye, EyeOff, Mail, Lock, User, ChevronLeft, CheckSquare, Square } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
 import { Button } from '../../components/ui/Button';
@@ -23,6 +23,7 @@ const registerSchema = z.object({
   email: z.string().email('Enter a valid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
+  agreeDPDP: z.boolean().refine((val) => val === true, { message: "You must agree to the DPDP and Privacy Policy" }),
 }).refine((d) => d.password === d.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -44,6 +45,7 @@ export default function RegisterScreen() {
       email: '',
       password: '',
       confirmPassword: '',
+      agreeDPDP: false
     },
   });
 
@@ -200,6 +202,31 @@ export default function RegisterScreen() {
                 error={errors.confirmPassword?.message}
                 leftIcon={<Lock size={18} color={theme.colors.textMuted} />}
               />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="agreeDPDP"
+            render={({ field: { value, onChange } }) => (
+              <View style={{ marginBottom: 16 }}>
+                <TouchableOpacity 
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} 
+                  onPress={() => onChange(!value)}
+                >
+                  {value ? (
+                    <CheckSquare size={20} color={theme.colors.primary} />
+                  ) : (
+                    <Square size={20} color={theme.colors.textMuted} />
+                  )}
+                  <Text style={{ flex: 1, color: theme.colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
+                    I agree to the <Text style={{ color: theme.colors.primary }}>Privacy Policy</Text> and consent to the collection of my data as per the <Text style={{ color: theme.colors.primary }}>DPDP Act</Text>.
+                  </Text>
+                </TouchableOpacity>
+                {errors.agreeDPDP && (
+                  <Text style={{ color: theme.colors.error, fontSize: 12, marginTop: 4 }}>{errors.agreeDPDP.message}</Text>
+                )}
+              </View>
             )}
           />
 

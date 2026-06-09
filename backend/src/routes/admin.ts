@@ -118,6 +118,38 @@ router.post('/jobs/:id/review', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+router.put('/jobs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payload = req.body;
+    
+    const updateData: any = {};
+    if (payload.title) updateData.title = payload.title;
+    if (payload.companyName) updateData.company_name = payload.companyName;
+    if (payload.description) updateData.description = payload.description;
+    if (payload.requirements) updateData.requirements = payload.requirements;
+    if (payload.skills) updateData.skills = payload.skills;
+    if (payload.jobType) updateData.job_type = payload.jobType;
+    if (payload.experienceLevel) updateData.experience_level = payload.experienceLevel;
+    if (payload.salaryMin !== undefined) updateData.salary_min = payload.salaryMin;
+    if (payload.salaryMax !== undefined) updateData.salary_max = payload.salaryMax;
+    if (payload.location) updateData.location = payload.location;
+    if (payload.isRemote !== undefined) updateData.is_remote = payload.isRemote;
+    if (payload.applyLink) updateData.apply_link = payload.applyLink;
+    if (payload.deadline) updateData.deadline = payload.deadline;
+    if (payload.status) updateData.status = payload.status;
+
+    const { error } = await supabaseAdmin
+      .from('jobs')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 router.get('/users', async (req, res) => {
   try {

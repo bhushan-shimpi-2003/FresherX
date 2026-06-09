@@ -20,14 +20,24 @@ function formatLakh(value: number): string {
  */
 export function formatDeadline(deadline: string | null): string {
   if (!deadline) return 'No deadline';
-  const diff = new Date(deadline).getTime() - Date.now();
-  if (diff < 0) return 'Expired';
+  const dateObj = new Date(deadline);
+  
+  const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const exactString = `(Expires: ${formattedDate} at ${formattedTime})`;
+
+  const diff = dateObj.getTime() - Date.now();
+  if (diff < 0) return `Expired on ${formattedDate}`;
+  
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return 'Today!';
-  if (days === 1) return '1 day left';
-  if (days <= 7) return `${days} days left`;
-  if (days <= 30) return `${Math.ceil(days / 7)} weeks left`;
-  return `${Math.ceil(days / 30)} months left`;
+  let relative = '';
+  if (days === 0) relative = 'Today!';
+  else if (days === 1) relative = '1 day left';
+  else if (days <= 7) relative = `${days} days left`;
+  else if (days <= 30) relative = `${Math.ceil(days / 7)} weeks left`;
+  else relative = `${Math.ceil(days / 30)} months left`;
+  
+  return `${relative} ${exactString}`;
 }
 
 /**

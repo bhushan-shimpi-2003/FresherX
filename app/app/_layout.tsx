@@ -3,6 +3,9 @@ import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Platform } from 'react-native';
+import * as Application from 'expo-application';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   useFonts,
   Inter_400Regular,
@@ -47,16 +50,43 @@ export default function RootLayout() {
       
       const inAuthGroup = segments[0] === '(auth)';
       
-      if (status === 'unauthenticated' && !inAuthGroup) {
-        router.replace('/(auth)/welcome');
-      } else if (status === 'authenticated' && user) {
-        // Only redirect from index or auth group to prevent interrupting deep links
-        if (pathname === '/' || inAuthGroup) {
-          if (user.role === 'student') router.replace('/(student)/home');
-          else if (user.role === 'recruiter') router.replace('/(recruiter)/dashboard');
-          else if (user.role === 'admin') router.replace('/(admin)/dashboard');
+      const handleRouting = async () => {
+        if (status === 'unauthenticated' && !inAuthGroup) {
+          router.replace('/(auth)/welcome');
+        } else if (status === 'authenticated' && user) {
+          // Only redirect from index or auth group to prevent interrupting deep links
+          if (pathname === '/' || inAuthGroup) {
+            
+            let hasPendingReferrer = false;
+            if (Platform.OS === 'android') {
+              try {
+                const hasChecked = await AsyncStorage.getItem('has_checked_referrer');
+                if (!hasChecked) {
+                  const referrer = await Application.getInstallReferrerAsync();
+                  if (referrer && referrer.includes('job_id=')) {
+                    const match = referrer.match(/job_id=([^&]+)/);
+                    if (match && match[1]) {
+                      hasPendingReferrer = true;
+                      router.replace(`/(student)/job/${match[1]}`);
+                    }
+                  }
+                  await AsyncStorage.setItem('has_checked_referrer', 'true');
+                }
+              } catch (e) {
+                console.warn('Failed to read install referrer', e);
+              }
+            }
+
+            if (!hasPendingReferrer) {
+              if (user.role === 'student') router.replace('/(student)/home');
+              else if (user.role === 'recruiter') router.replace('/(recruiter)/dashboard');
+              else if (user.role === 'admin') router.replace('/(admin)/dashboard');
+            }
+          }
         }
-      }
+      };
+
+      handleRouting();
     }
   }, [fontsLoaded, status, user, segments, pathname]);
 

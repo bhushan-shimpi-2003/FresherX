@@ -1,8 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,11 +9,14 @@ import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
-import { useRecruiterStore } from '../../../store/recruiter.store';
+import { recruiterApi } from '../../../services/api/recruiter.api';
+import { adminApi } from '../../../services/api/admin.api';
+import { jobsApi } from '../../../services/api/jobs.api';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Chip } from '../../../components/ui/Chip';
 import { JOB_TYPES, POPULAR_SKILLS } from '../../../constants/config';
+import { Loader } from '../../../components/ui/Loader';
 import type { CreateJobPayload } from '../../../types/job.types';
 
 const STEPS = ['Basic Info', 'Skills', 'Compensation', 'Location'];
@@ -32,12 +34,14 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-export default function CreateJobScreen() {
+export default function EditJobScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { id } = useLocalSearchParams();
   const { user } = useAuthStore();
-  const { createJob, saveDraft, isLoading } = useRecruiterStore();
-
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(0);
   const [selectedJobType, setSelectedJobType] = useState('Full-time');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -45,10 +49,43 @@ export default function CreateJobScreen() {
   const [referralAvailable, setReferralAvailable] = useState(false);
   const [referralSlots, setReferralSlots] = useState('');
 
-  const { control, handleSubmit, formState: { errors }, trigger } = useForm<FormData>({
+  const { control, handleSubmit, formState: { errors }, trigger, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { title: '', companyName: '', description: '', requirements: '', applyLink: '', location: '' },
   });
+
+  useEffect(() => {
+    const fetchJob = async () => {
+      try {
+        if (!id) return;
+        const job = await jobsApi.fetchById(id as string);
+        
+        reset({
+          title: job.title,
+          companyName: job.companyName || '',
+          description: job.description,
+          requirements: job.requirements || '',
+          applyLink: job.applyLink,
+          location: job.location || '',
+          salaryMin: job.salaryMin ? job.salaryMin.toString() : '',
+          salaryMax: job.salaryMax ? job.salaryMax.toString() : '',
+          deadline: job.deadline ? new Date(job.deadline).toISOString().slice(0, 16).replace('T', ' ') : '',
+        });
+        setSelectedJobType(job.jobType || 'Full-time');
+        setSelectedSkills(job.skills || []);
+        setIsRemote(job.isRemote || false);
+        setReferralAvailable(job.referralAvailable || false);
+        setReferralSlots(job.referralSlots ? job.referralSlots.toString() : '');
+        
+      } catch (error) {
+        Alert.alert('Error', 'Failed to load job details');
+        router.back();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchJob();
+  }, [id, reset]);
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills((prev) =>
@@ -68,9 +105,11 @@ export default function CreateJobScreen() {
   };
 
   const onSubmit = async (data: FormData) => {
-    if (!user) return;
-    const payload: CreateJobPayload = {
+    if (!user || !id) return;
+    setIsSubmitting(true);
+    const payload: Partial<CreateJobPayload> = {
       title: data.title,
+      companyName: data.companyName,
       description: data.description,
       requirements: data.requirements,
       skills: selectedSkills,
@@ -84,24 +123,28 @@ export default function CreateJobScreen() {
       deadline: data.deadline,
       referralAvailable,
       referralSlots: referralAvailable && referralSlots ? parseInt(referralSlots) : 0,
-      companyName: ''
     };
 
-    const result = await createJob(user.id, payload);
-    if (result.success) {
-      Alert.alert('Posted!', 'Your job has been submitted for review.', [
-        { text: 'View Posts', onPress: () => router.push('/(recruiter)/posts') },
+    try {
+      if (user.role === 'admin') {
+        await adminApi.updateJob(id as string, payload);
+      } else {
+        await recruiterApi.updateJob(id as string, payload);
+      }
+      
+      Alert.alert('Updated!', 'Job details have been updated.', [
+        { text: 'OK', onPress: () => router.back() },
       ]);
-    } else {
-      Alert.alert('Error', result.error ?? 'Failed to post job');
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.error || 'Failed to update job');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleSaveDraft = handleSubmit(async (data) => {
-    if (!user) return;
-    await saveDraft(user.id, { title: data.title, description: data.description });
-    Alert.alert('Saved', 'Draft saved successfully.');
-  });
+  if (isLoading) {
+    return <Loader fullScreen />;
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
@@ -111,13 +154,9 @@ export default function CreateJobScreen() {
           <ChevronLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>
-          Post a Job
+          Edit Job
         </Text>
-        <TouchableOpacity onPress={handleSaveDraft}>
-          <Text style={[styles.draftBtn, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium }]}>
-            Save Draft
-          </Text>
-        </TouchableOpacity>
+        <View style={{ width: 24 }} />
       </View>
 
       {/* Step indicator */}
@@ -178,7 +217,7 @@ export default function CreateJobScreen() {
                 Job Type
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-                {JOB_TYPES.map((type) => (
+                {JOB_TYPES.map((type: string) => (
                   <Chip key={type} label={type} selected={selectedJobType === type} onPress={() => setSelectedJobType(type)} style={{ marginRight: 8 }} />
                 ))}
               </ScrollView>
@@ -207,7 +246,7 @@ export default function CreateJobScreen() {
                 Required Skills ({selectedSkills.length} selected)
               </Text>
               <View style={styles.skillsGrid}>
-                {POPULAR_SKILLS.map((skill) => (
+                {POPULAR_SKILLS.map((skill: string) => (
                   <Chip key={skill} label={skill} selected={selectedSkills.includes(skill)} onPress={() => toggleSkill(skill)} />
                 ))}
               </View>
@@ -276,7 +315,7 @@ export default function CreateJobScreen() {
         {step < STEPS.length - 1 ? (
           <Button label="Next" variant="primary" size="lg" fullWidth rightIcon={<ChevronRight size={18} color="#FFF" />} onPress={nextStep} />
         ) : (
-          <Button label="Submit Job" variant="primary" size="lg" fullWidth loading={isLoading} onPress={handleSubmit(onSubmit)} />
+          <Button label="Update Job" variant="primary" size="lg" fullWidth loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
         )}
       </View>
     </SafeAreaView>
@@ -287,7 +326,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 },
   headerTitle: { fontSize: 20, letterSpacing: -0.3 },
-  draftBtn: { fontSize: 15 },
   stepBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 24 },
   stepItem: { alignItems: 'center', gap: 6 },
   stepCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },

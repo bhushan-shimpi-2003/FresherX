@@ -155,7 +155,7 @@ export default function RecruiterPostsScreen() {
 
                 {/* Actions */}
                 <View style={[styles.cardActions, { borderTopColor: theme.colors.border }]}>
-                  <TouchableOpacity style={styles.actionBtn}>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => router.push(`/(shared)/edit-job/${item.id}`)}>
                     <Edit size={15} color={theme.colors.primary} />
                     <Text style={[styles.actionText, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium }]}>
                       Edit

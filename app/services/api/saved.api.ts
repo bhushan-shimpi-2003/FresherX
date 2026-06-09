@@ -10,7 +10,6 @@ export const savedJobsApi = {
       job: {
         id: raw.jobs?.id,
         title: raw.jobs?.title,
-        company: raw.jobs?.company,
         location: raw.jobs?.location,
         salaryMin: raw.jobs?.salary_min,
         salaryMax: raw.jobs?.salary_max,

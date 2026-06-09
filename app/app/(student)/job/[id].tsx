@@ -18,6 +18,7 @@ import { Button } from '../../../components/ui/Button';
 import { Avatar } from '../../../components/ui/Avatar';
 import { formatSalary, formatDeadline, formatRelativeTime, getMatchColor } from '../../../utils/formatters';
 import { palette } from '../../../constants/colors';
+import { jobsApi } from '@/services/api/jobs.api';
 
 export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -81,6 +82,12 @@ export default function JobDetailScreen() {
 
           <Text style={[styles.jobTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.extraBold }]}>
             {job.title}
+          </Text>
+          <Text style={{ textAlign: 'center', fontSize: 18, color: theme.colors.primary, marginTop: 8, fontFamily: theme.typography.fontFamily.semiBold }}>
+            {job.companyName}
+          </Text>
+          <Text style={{ textAlign: 'center', color: theme.colors.textMuted, marginTop: 4, fontFamily: theme.typography.fontFamily.regular }}>
+            Posted by {job.recruiter?.fullName ?? 'Unknown'}
           </Text>
 
           {/* Match score */}

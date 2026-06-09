@@ -7,6 +7,7 @@ import { PAGE_SIZE } from '../constants/config';
 interface JobsStore {
   jobs: Job[];
   savedJobs: Job[];
+  recommendedJobs: Job[];
   selectedJob: Job | null;
   filters: JobFilters;
   page: number;
@@ -14,11 +15,13 @@ interface JobsStore {
   isLoading: boolean;
   isLoadingMore: boolean;
   isSavedLoading: boolean;
+  isRecommendedLoading: boolean;
   error: string | null;
 
   // Actions
   fetchJobs: (filters?: JobFilters, reset?: boolean) => Promise<void>;
   fetchMoreJobs: () => Promise<void>;
+  fetchRecommendedJobs: () => Promise<void>;
   fetchJobById: (id: string) => Promise<void>;
   fetchSavedJobs: (userId: string) => Promise<void>;
   saveJob: (jobId: string, userId: string) => Promise<void>;
@@ -32,6 +35,7 @@ interface JobsStore {
 export const useJobsStore = create<JobsStore>((set, get) => ({
   jobs: [],
   savedJobs: [],
+  recommendedJobs: [],
   selectedJob: null,
   filters: {},
   page: 1,
@@ -39,6 +43,7 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
   isLoading: false,
   isLoadingMore: false,
   isSavedLoading: false,
+  isRecommendedLoading: false,
   error: null,
 
   setFilters: (filters) => set({ filters }),
@@ -47,7 +52,8 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
   reset: () => set({ jobs: [], page: 1, hasMore: true, error: null }),
 
   fetchJobs: async (filters, reset = true) => {
-    const currentFilters = filters ?? get().filters;
+    const currentFilters = filters ? { ...get().filters, ...filters } : get().filters;
+    set({ filters: currentFilters });
     set({ isLoading: true, error: null, ...(reset ? { jobs: [], page: 1 } : {}) });
 
     try {
@@ -61,6 +67,16 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
       });
     } catch (err: any) {
       set({ error: err?.message, isLoading: false });
+    }
+  },
+
+  fetchRecommendedJobs: async () => {
+    set({ isRecommendedLoading: true, error: null });
+    try {
+      const { jobs } = await jobsApi.fetchJobs({ matchUserSkills: true }, 0);
+      set({ recommendedJobs: jobs, isRecommendedLoading: false });
+    } catch (err: any) {
+      set({ error: err?.message, isRecommendedLoading: false });
     }
   },
 

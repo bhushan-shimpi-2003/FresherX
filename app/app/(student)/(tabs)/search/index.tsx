@@ -1,9 +1,9 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+  View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SlidersHorizontal } from 'lucide-react-native';
+import { SlidersHorizontal, X } from 'lucide-react-native';
 import { useTheme } from '../../../../theme';
 import { useJobsStore } from '../../../../store/jobs.store';
 import { useAuthStore } from '../../../../store/auth.store';
@@ -30,6 +30,23 @@ export default function SearchScreen() {
   const [referralAvailable, setReferralAvailable] = useState<boolean | undefined>(undefined);
   const [sort, setSort] = useState('Newest');
 
+  const [showFilters, setShowFilters] = useState(false);
+  const [datePosted, setDatePosted] = useState<'24h' | '7d' | 'all'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>('recent');
+
+  const applyAdvancedFilters = () => {
+    setShowFilters(false);
+    fetchJobs({
+      keyword: keyword || undefined,
+      jobType: selectedTypes.length ? selectedTypes : undefined,
+      isRemote,
+      referralAvailable,
+      datePosted: datePosted === 'all' ? undefined : datePosted,
+      sortBy,
+      matchUserSkills: false
+    }, true);
+  };
+
   const handleSearch = useCallback((text: string) => {
     setKeyword(text);
     fetchJobs({
@@ -37,20 +54,31 @@ export default function SearchScreen() {
       jobType: selectedTypes.length ? selectedTypes : undefined,
       isRemote,
       referralAvailable,
+      datePosted: datePosted === 'all' ? undefined : datePosted,
+      sortBy,
+      matchUserSkills: false
     }, true);
-  }, [selectedTypes, isRemote, referralAvailable]);
+  }, [selectedTypes, isRemote, referralAvailable, datePosted, sortBy]);
 
   const toggleJobType = (type: JobType) => {
     const updated = selectedTypes.includes(type)
       ? selectedTypes.filter((t) => t !== type)
       : [...selectedTypes, type];
     setSelectedTypes(updated);
-    fetchJobs({ keyword: keyword || undefined, jobType: updated.length ? updated : undefined, isRemote, referralAvailable }, true);
+    fetchJobs({ 
+      keyword: keyword || undefined, 
+      jobType: updated.length ? updated : undefined, 
+      isRemote, 
+      referralAvailable,
+      datePosted: datePosted === 'all' ? undefined : datePosted,
+      sortBy,
+      matchUserSkills: false 
+    }, true);
   };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-      <ScreenHeader title="Search Jobs" subtitle="Discover new opportunities" />
+      <ScreenHeader title="Jobs" subtitle="Discover new opportunities" />
       {/* Search bar */}
       <View style={styles.topArea}>
         <SearchBar
@@ -59,33 +87,24 @@ export default function SearchScreen() {
           autoFocus={false}
           style={{ flex: 1 }}
         />
-        <TouchableOpacity style={[styles.filterBtn, { backgroundColor: theme.colors.primary + '20', borderColor: theme.colors.primary + '30' }]}>
-          <SlidersHorizontal size={18} color={theme.colors.primary} />
+        <TouchableOpacity 
+          style={styles.filterBtn}
+          onPress={() => setShowFilters(true)}
+        >
+          <SlidersHorizontal size={20} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
       {/* Job type filters */}
       <FlatList
         horizontal
-        data={['Referrals', 'Remote', ...JOB_TYPES.filter(t => t !== 'Remote')]}
+        data={['Remote', ...JOB_TYPES.filter(t => t !== 'Remote')]}
         keyExtractor={(item) => item}
         showsHorizontalScrollIndicator={false}
         style={{ flexGrow: 0 }}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}
         renderItem={({ item }) => {
-          if (item === 'Referrals') {
-            return (
-              <Chip
-                label="🤝 Referrals"
-                selected={referralAvailable === true}
-                onPress={() => {
-                  const newVal = referralAvailable === true ? undefined : true;
-                  setReferralAvailable(newVal);
-                  fetchJobs({ keyword: keyword || undefined, jobType: selectedTypes.length ? selectedTypes : undefined, isRemote, referralAvailable: newVal }, true);
-                }}
-              />
-            );
-          }
+
           if (item === 'Remote') {
             return (
               <Chip
@@ -94,7 +113,15 @@ export default function SearchScreen() {
                 onPress={() => {
                   const newVal = isRemote === true ? undefined : true;
                   setIsRemote(newVal);
-                  fetchJobs({ keyword: keyword || undefined, jobType: selectedTypes.length ? selectedTypes : undefined, isRemote: newVal, referralAvailable }, true);
+                  fetchJobs({ 
+                    keyword: keyword || undefined, 
+                    jobType: selectedTypes.length ? selectedTypes : undefined, 
+                    isRemote: newVal, 
+                    referralAvailable,
+                    datePosted: datePosted === 'all' ? undefined : datePosted,
+                    sortBy,
+                    matchUserSkills: false 
+                  }, true);
                 }}
               />
             );
@@ -144,6 +171,50 @@ export default function SearchScreen() {
         onEndReachedThreshold={0.4}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Advanced Filters Modal */}
+      <Modal visible={showFilters} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Advanced Filters</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <X size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.filterGroupTitle, { color: theme.colors.textMuted }]}>Date Posted</Text>
+            <View style={styles.chipGroup}>
+              {[{ label: 'All Time', val: 'all' }, { label: 'Last 24 Hours', val: '24h' }, { label: 'Last 7 Days', val: '7d' }].map(opt => (
+                <Chip
+                  key={opt.val}
+                  label={opt.label}
+                  selected={datePosted === opt.val}
+                  onPress={() => setDatePosted(opt.val as any)}
+                  style={{ marginBottom: 12, marginRight: 8 }}
+                />
+              ))}
+            </View>
+
+            <Text style={[styles.filterGroupTitle, { color: theme.colors.textMuted }]}>Sort By</Text>
+            <View style={styles.chipGroup}>
+              {[{ label: 'Most Recent', val: 'recent' }, { label: 'Most Relevant', val: 'popular' }].map(opt => (
+                <Chip
+                  key={opt.val}
+                  label={opt.label}
+                  selected={sortBy === opt.val}
+                  onPress={() => setSortBy(opt.val as any)}
+                  style={{ marginBottom: 12, marginRight: 8 }}
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity style={[styles.applyBtn, { backgroundColor: theme.colors.primary }]} onPress={applyAdvancedFilters}>
+              <Text style={styles.applyBtnText}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -161,10 +232,18 @@ const styles = StyleSheet.create({
   filterBtn: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(99, 102, 241, 0.15)', // Same as theme.colors.primary + '15'
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
   },
   resultsText: { fontSize: 13, marginBottom: 12 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
+  modalTitle: { fontSize: 20, fontFamily: 'Inter_700Bold' },
+  filterGroupTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', marginBottom: 12, marginTop: 8 },
+  chipGroup: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
+  applyBtn: { padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
+  applyBtnText: { color: '#FFF', fontSize: 16, fontFamily: 'Inter_600SemiBold' },
 });

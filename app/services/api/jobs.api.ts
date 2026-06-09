@@ -28,7 +28,13 @@ function mapJob(raw: any): Job {
   return {
     id: raw.id,
     title: raw.title,
+    companyName: raw.company_name ?? 'Unknown Company',
     recruiterId: raw.recruiter_id ?? '',
+    recruiter: raw.recruiter ? {
+      id: raw.recruiter.id,
+      fullName: raw.recruiter.full_name,
+      posterType: raw.recruiter.poster_type,
+    } : undefined,
     description: raw.description,
     requirements: raw.requirements,
     skills: raw.skills ?? [],

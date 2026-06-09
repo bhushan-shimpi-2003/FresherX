@@ -31,7 +31,7 @@ export default function ReferralRequestScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Button variant="ghost" leftIcon={<ChevronLeft size={24} color={theme.colors.text} />} onPress={() => router.back()} />
+        <Button variant="ghost" leftIcon={<ChevronLeft size={24} color={theme.colors.text} />} onPress={() => router.back()} label={''} />
         <Text style={[styles.headerTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }]}>Request Referral</Text>
         <View style={{ width: 40 }} />
       </View>

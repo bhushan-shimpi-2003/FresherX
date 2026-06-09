@@ -46,7 +46,7 @@ router.post('/jobs', async (req, res) => {
       .from('jobs')
       .insert({
         recruiter_id: userId,
-        company_id: payload.companyId,
+        company_name: payload.companyName,
         title: payload.title,
         description: payload.description,
         requirements: payload.requirements,
@@ -97,6 +97,7 @@ router.put('/jobs/:id', async (req, res) => {
     // based on how the frontend sends it
     const updateData: any = {};
     if (payload.title) updateData.title = payload.title;
+    if (payload.companyName) updateData.company_name = payload.companyName;
     if (payload.description) updateData.description = payload.description;
     if (payload.requirements) updateData.requirements = payload.requirements;
     if (payload.skills) updateData.skills = payload.skills;

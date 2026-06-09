@@ -29,7 +29,7 @@ export function Chip({ label, selected = false, onPress, style, icon }: ChipProp
         {
           backgroundColor: selected ? theme.colors.primary : theme.colors.card,
           borderColor: selected ? theme.colors.primary : theme.colors.border,
-          borderRadius: theme.borderRadius.full,
+          borderRadius: 12, // Reduced from full to 12
         },
         style,
       ]}
@@ -44,7 +44,7 @@ export function Chip({ label, selected = false, onPress, style, icon }: ChipProp
           styles.label,
           {
             color: selected ? '#FFFFFF' : theme.colors.textSecondary,
-            fontFamily: theme.typography.fontFamily.medium,
+            fontFamily: theme.typography.fontFamily.semiBold, // Make it semi-bold for better readability
           },
         ]}
       >
@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12, // Increased height
     borderWidth: 1.5,
   },
   label: { fontSize: 13 },

@@ -1,9 +1,9 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useCallback, useState } from 'react';
 import {
-  View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
+  View, Text, FlatList, RefreshControl, StyleSheet, Modal } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Bell, Sliders } from 'lucide-react-native';
+import { Bell, Sliders, X, UserCheck, Bookmark as BookmarkIcon, BellRing } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../../theme';
 import { useAuthStore } from '../../../../store/auth.store';
@@ -19,6 +19,7 @@ import { useUserStore } from '../../../../store/user.store';
 import { TouchableOpacity } from 'react-native';
 import { Briefcase } from 'lucide-react-native';
 import { ScreenHeader } from '../../../../components/ui/ScreenHeader';
+import { calculateProfileCompleteness } from '../../../../utils/profileScorer';
 
 const JOB_TYPE_FILTERS = ['All', 'Internship', 'Full-time', 'Remote', 'Part-time'];
 
@@ -27,7 +28,10 @@ export default function StudentHomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { profile } = useUserStore();
-  const { jobs, isLoading, isLoadingMore, hasMore, fetchJobs, fetchMoreJobs, saveJob, unsaveJob } = useJobsStore();
+  const { 
+    jobs, isLoading, isLoadingMore, hasMore, fetchJobs, fetchMoreJobs, saveJob, unsaveJob,
+    recommendedJobs, isRecommendedLoading, fetchRecommendedJobs
+  } = useJobsStore();
   const { unreadCount } = useNotificationsStore();
   const [searchText, setSearchText] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
@@ -35,6 +39,7 @@ export default function StudentHomeScreen() {
 
   useEffect(() => {
     fetchJobs();
+    fetchRecommendedJobs();
     if (user) {
       // fetchProfile(user.id) // would be here
     }
@@ -42,7 +47,10 @@ export default function StudentHomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchJobs({}, true);
+    await Promise.all([
+      fetchJobs(undefined, true),
+      fetchRecommendedJobs()
+    ]);
     setRefreshing(false);
   }, []);
 
@@ -53,7 +61,7 @@ export default function StudentHomeScreen() {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
-    fetchJobs(filter === 'All' ? {} : { jobType: [filter as any] }, true);
+    fetchJobs({ jobType: filter === 'All' ? undefined : filter as any }, true);
   };
 
   const handleSaveToggle = (jobId: string, isSaved: boolean) => {
@@ -67,9 +75,18 @@ export default function StudentHomeScreen() {
       job={item}
       index={index}
       onPress={() => router.push(`/(student)/job/${item.id}`)}
-      onSave={() => handleSaveToggle(item.id, item.isSaved)}
+      onSave={() => handleSaveToggle(item.id, item.isSaved ?? false)}
     />
   ), []);
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [datePosted, setDatePosted] = useState<'24h' | '7d' | 'all'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>('recent');
+
+  const applyAdvancedFilters = () => {
+    setShowFilters(false);
+    fetchJobs({ datePosted: datePosted === 'all' ? undefined : datePosted, sortBy }, true);
+  };
 
   const renderHeader = () => (
     <>
@@ -96,24 +113,129 @@ export default function StudentHomeScreen() {
       <SearchBar
         value={searchText}
         onChangeText={handleSearch}
-        style={{ marginHorizontal: 16, marginBottom: 16 }}
+        style={{ marginHorizontal: 16, marginBottom: 20 }}
       />
 
-      {/* Filter chips */}
-      <FlatList
-        horizontal
-        data={JOB_TYPE_FILTERS}
-        keyExtractor={(item) => item}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, marginBottom: 20 }}
-        renderItem={({ item }) => (
-          <Chip
-            label={item}
-            selected={activeFilter === item}
-            onPress={() => handleFilterChange(item)}
+      {/* KPI Cards */}
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 28, gap: 12 }}>
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: theme.colors.primary + '15', padding: 16, borderRadius: 20 }}
+          onPress={() => router.push('/(student)/profile')}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <UserCheck size={20} color={theme.colors.primary} />
+            <Text style={{ fontSize: 22, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.primary }}>
+              {calculateProfileCompleteness(profile)}%
+            </Text>
+          </View>
+          <Text style={{ fontSize: 13, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
+            Profile Score
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: theme.colors.accent + '15', padding: 16, borderRadius: 20 }}
+          onPress={() => router.push('/(student)/(tabs)/saved')}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <BookmarkIcon size={20} color={theme.colors.accent} />
+            <Text style={{ fontSize: 22, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.accent }}>
+              {saveJob?.length ?? 0}
+            </Text>
+          </View>
+          <Text style={{ fontSize: 13, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
+            Saved Jobs
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: theme.colors.warning + '15', padding: 16, borderRadius: 20 }}
+          onPress={() => router.push('/(student)/notifications')}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <BellRing size={20} color={theme.colors.warning} />
+            <Text style={{ fontSize: 22, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.warning }}>
+              {unreadCount ?? 0}
+            </Text>
+          </View>
+          <Text style={{ fontSize: 13, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
+            Alerts
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Recommended Jobs */}
+      {recommendedJobs.length > 0 && (
+        <View style={{ marginBottom: 28 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>
+              Recommended for you
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/(student)/(tabs)/search')}>
+              <Text style={{ color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium, fontSize: 13 }}>
+                See all {'>'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            horizontal
+            data={recommendedJobs}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingLeft: 16 }}
+            renderItem={({ item, index }) => (
+              <JobCard
+                job={item}
+                index={index}
+                variant="compact"
+                onPress={() => router.push(`/(student)/job/${item.id}`)}
+                onSave={() => handleSaveToggle(item.id, item.isSaved ?? false)}
+              />
+            )}
           />
-        )}
-      />
+        </View>
+      )}
+
+      {/* Feed Header */}
+      <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 20, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>
+          Discover Jobs
+        </Text>
+      </View>
+
+      {/* Filter chips & Advanced Filters */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+        <FlatList
+          horizontal
+          data={JOB_TYPE_FILTERS}
+          keyExtractor={(item) => item}
+          showsHorizontalScrollIndicator={false}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingLeft: 16, paddingRight: 16, gap: 8 }}
+          renderItem={({ item }) => (
+            <Chip
+              label={item}
+              selected={activeFilter === item}
+              onPress={() => handleFilterChange(item)}
+            />
+          )}
+        />
+        <TouchableOpacity
+          style={{
+            marginRight: 16,
+            marginLeft: 8,
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            backgroundColor: theme.colors.primary + '15',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onPress={() => setShowFilters(true)}
+        >
+          <Sliders size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
+      </View>
 
       {/* Section title */}
       <Animated.View entering={FadeInDown.delay(100)} style={styles.sectionHeader}>
@@ -166,6 +288,50 @@ export default function StudentHomeScreen() {
           }
         />
       )}
+
+      {/* Advanced Filters Modal */}
+      <Modal visible={showFilters} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Advanced Filters</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <X size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.filterGroupTitle, { color: theme.colors.textMuted }]}>Date Posted</Text>
+            <View style={styles.chipGroup}>
+              {[{ label: 'All Time', val: 'all' }, { label: 'Last 24 Hours', val: '24h' }, { label: 'Last 7 Days', val: '7d' }].map(opt => (
+                <Chip
+                  key={opt.val}
+                  label={opt.label}
+                  selected={datePosted === opt.val}
+                  onPress={() => setDatePosted(opt.val as any)}
+                  style={{ marginBottom: 12, marginRight: 8 }}
+                />
+              ))}
+            </View>
+
+            <Text style={[styles.filterGroupTitle, { color: theme.colors.textMuted }]}>Sort By</Text>
+            <View style={styles.chipGroup}>
+              {[{ label: 'Most Recent', val: 'recent' }, { label: 'Most Relevant', val: 'popular' }].map(opt => (
+                <Chip
+                  key={opt.val}
+                  label={opt.label}
+                  selected={sortBy === opt.val}
+                  onPress={() => setSortBy(opt.val as any)}
+                  style={{ marginBottom: 12, marginRight: 8 }}
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity style={[styles.applyBtn, { backgroundColor: theme.colors.primary }]} onPress={applyAdvancedFilters}>
+              <Text style={styles.applyBtnText}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -190,4 +356,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 18 },
   sectionCount: { fontSize: 13 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
+  modalTitle: { fontSize: 20, fontFamily: 'Inter_700Bold' },
+  filterGroupTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', marginBottom: 12, marginTop: 8 },
+  chipGroup: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
+  applyBtn: { padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
+  applyBtnText: { color: '#FFF', fontSize: 16, fontFamily: 'Inter_600SemiBold' },
 });

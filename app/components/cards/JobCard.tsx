@@ -16,9 +16,10 @@ interface JobCardProps {
   onPress: () => void;
   onSave?: () => void;
   index?: number;
+  variant?: 'default' | 'compact';
 }
 
-export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
+export function JobCard({ job, onPress, onSave, index = 0, variant = 'default' }: JobCardProps) {
   const theme = useTheme();
   const scale = useSharedValue(1);
   const saveScale = useSharedValue(1);
@@ -39,6 +40,66 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
   };
 
   const matchColor = job.matchScore ? getMatchColor(job.matchScore) : null;
+
+  if (variant === 'compact') {
+    return (
+      <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
+        <Animated.View
+          style={[
+            cardStyle,
+            styles.card,
+            styles.compactCard,
+            {
+              backgroundColor: theme.colors.card,
+              borderColor: theme.colors.border,
+              borderRadius: theme.borderRadius.xl,
+            },
+          ]}
+        >
+          <TouchableOpacity onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} activeOpacity={1}>
+            <View style={styles.compactHeader}>
+              {job.matchScore ? (
+                <View style={[styles.matchBadge, { backgroundColor: matchColor + '18', borderColor: 'transparent', paddingHorizontal: 10 }]}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: matchColor as string }} />
+                  <Text style={[styles.matchText, { color: matchColor!, fontFamily: theme.typography.fontFamily.bold, fontSize: 11 }]}>
+                    {job.matchScore}% Match
+                  </Text>
+                </View>
+              ) : <View />}
+            </View>
+            <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]} numberOfLines={1}>
+              {job.title}
+            </Text>
+            <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily.medium, marginBottom: 12 }} numberOfLines={1}>
+              {job.companyName} • {job.isRemote ? 'Remote' : job.location}
+            </Text>
+            {((job.skills?.length ?? 0) > 0) && (
+              <View style={styles.compactSkills}>
+                {(job.skills || []).slice(0, 2).map((skill) => (
+                  <View key={skill} style={[styles.compactSkillBadge, { backgroundColor: theme.colors.background }]}>
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}>{skill}</Text>
+                  </View>
+                ))}
+                {(job.skills?.length ?? 0) > 2 && (
+                  <View style={[styles.compactSkillBadge, { backgroundColor: theme.colors.background }]}>
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 11, fontFamily: theme.typography.fontFamily.medium }}>+{(job.skills?.length ?? 0) - 2}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+            <View style={styles.compactFooter}>
+              <Text style={[styles.salary, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold, fontSize: 14 }]}>
+                {formatSalary(job.salaryMin, job.salaryMax)}
+              </Text>
+              <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontFamily: theme.typography.fontFamily.medium }}>
+                {job.jobType}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
@@ -65,7 +126,7 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
             <Text
               style={[styles.postedAt, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}
             >
-              Posted {formatRelativeTime(job.createdAt)}
+              Posted by {job.recruiter?.fullName ?? 'Unknown'} • {formatRelativeTime(job.createdAt)}
             </Text>
           </View>
 
@@ -86,6 +147,9 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
           numberOfLines={2}
         >
           {job.title}
+        </Text>
+        <Text style={{ fontSize: 14, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, marginBottom: 12 }}>
+          {job.companyName}
         </Text>
 
         {/* Meta row */}
@@ -132,15 +196,20 @@ export function JobCard({ job, onPress, onSave, index = 0 }: JobCardProps) {
           <Text style={[styles.salary, { color: theme.colors.accent, fontFamily: theme.typography.fontFamily.semiBold }]}>
             {formatSalary(job.salaryMin, job.salaryMax)}
           </Text>
-          <TouchableOpacity onPress={handleSave} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Animated.View style={saveStyle}>
-              <Bookmark
-                size={20}
-                color={job.isSaved ? theme.colors.primary : theme.colors.textMuted}
-                fill={job.isSaved ? theme.colors.primary : 'transparent'}
-              />
-            </Animated.View>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+            <Text style={{ color: theme.colors.primary, fontFamily: theme.typography.fontFamily.semiBold, fontSize: 13 }}>
+              View Details
+            </Text>
+            <TouchableOpacity onPress={handleSave} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Animated.View style={saveStyle}>
+                <Bookmark
+                  size={20}
+                  color={job.isSaved ? theme.colors.primary : theme.colors.textMuted}
+                  fill={job.isSaved ? theme.colors.primary : 'transparent'}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
       </Animated.View>
@@ -179,4 +248,33 @@ const styles = StyleSheet.create({
   skills: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 14 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   salary: { fontSize: 15 },
+  compactCard: {
+    width: 260,
+    marginRight: 16,
+    marginBottom: 0,
+    padding: 16,
+  },
+  compactHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end', // Align match score to right without logo
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  compactSkills: {
+    flexDirection: 'row',
+    gap: 6,
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  compactSkillBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  compactFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 'auto',
+  },
 });
