@@ -46,15 +46,48 @@ router.get('/', requireAuth, async (req, res) => {
       }
     }
 
+    // 1. Exclude applied jobs for this user
+    if (req.user) {
+      const { data: applied } = await supabaseAdmin
+        .from('applied_jobs')
+        .select('job_id')
+        .eq('user_id', req.user.id);
+      
+      if (applied && applied.length > 0) {
+        const appliedIds = applied.map(a => a.job_id);
+        query = query.not('id', 'in', `(${appliedIds.join(',')})`);
+      }
+    }
+
+    // 2. Recommended jobs (matchUserSkills)
     if (matchUserSkills === 'true' && req.user) {
       const { data: profile } = await supabaseAdmin
         .from('student_profiles')
-        .select('skills')
+        .select('skills, preferred_roles')
         .eq('id', req.user.id)
         .single();
         
-      if (profile && profile.skills && profile.skills.length > 0) {
-        query = query.overlaps('skills', profile.skills);
+      if (profile) {
+        // Must be posted in last 3 days for recommended
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        query = query.gte('created_at', threeDaysAgo.toISOString());
+
+        // Match skills OR preferred roles
+        // We will do this by chaining .or() 
+        const orConditions = [];
+        if (profile.skills && profile.skills.length > 0) {
+          orConditions.push(`skills.cs.{${profile.skills.join(',')}}`);
+        }
+        if (profile.preferred_roles && profile.preferred_roles.length > 0) {
+          // Construct ILIKE conditions for each role against the title
+          const roleConditions = profile.preferred_roles.map((r: string) => `title.ilike.%${r}%`);
+          orConditions.push(roleConditions.join(','));
+        }
+        
+        if (orConditions.length > 0) {
+          query = query.or(orConditions.join(','));
+        }
       }
     }
 
@@ -115,7 +148,45 @@ router.post('/:id/apply', requireAuth, async (req, res) => {
     const { error } = await supabaseAdmin.from('jobs').update({ applications: newCount }).eq('id', id);
     if (error) throw error;
     
+    // Track in applied_jobs
+    if (req.user) {
+      await supabaseAdmin.from('applied_jobs').insert({
+        user_id: req.user.id,
+        job_id: id
+      });
+    }
+    
     res.json({ success: true, applications: newCount });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get applied jobs
+router.get('/me/applied', requireAuth, async (req, res) => {
+  try {
+    if (!req.user) throw new Error('Unauthorized');
+    
+    const { data: applied, error: appliedError } = await supabaseAdmin
+      .from('applied_jobs')
+      .select('job_id')
+      .eq('user_id', req.user.id);
+      
+    if (appliedError) throw appliedError;
+    
+    if (!applied || applied.length === 0) {
+      return res.json({ data: [] });
+    }
+    
+    const jobIds = applied.map(a => a.job_id);
+    const { data, error } = await supabaseAdmin
+      .from('jobs')
+      .select(`*, recruiter:profiles(id, full_name, poster_type)`)
+      .in('id', jobIds)
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    res.json({ data });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

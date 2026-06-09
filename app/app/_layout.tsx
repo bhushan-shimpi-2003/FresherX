@@ -78,7 +78,13 @@ export default function RootLayout() {
             }
 
             if (!hasPendingReferrer) {
-              if (user.role === 'student') router.replace('/(student)/home');
+              if (user.role === 'student') {
+                if (user.onboardingComplete === false) {
+                  router.replace('/(auth)/onboarding');
+                } else {
+                  router.replace('/(student)/home');
+                }
+              }
               else if (user.role === 'recruiter') router.replace('/(recruiter)/dashboard');
               else if (user.role === 'admin') router.replace('/(admin)/dashboard');
             }

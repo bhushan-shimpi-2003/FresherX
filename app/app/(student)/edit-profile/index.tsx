@@ -20,6 +20,12 @@ import { POPULAR_SKILLS, DEGREES, JOB_TYPES } from '../../../constants/config';
 
 const LOCATIONS = ['Remote', 'Bangalore', 'Mumbai', 'Delhi NCR', 'Hyderabad', 'Pune', 'Chennai'];
 
+const ROLES = [
+  'Software Developer', 'Frontend Engineer', 'Backend Engineer',
+  'Full Stack Engineer', 'Mobile Developer', 'Data Scientist',
+  'UI/UX Designer', 'Product Manager', 'QA Engineer'
+];
+
 const schema = z.object({
   fullName: z.string().min(2),
   phone: z.string().optional(),
@@ -40,6 +46,7 @@ export default function EditProfileScreen() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>(profile?.skills ?? []);
   const [selectedTypes, setSelectedTypes] = useState<string[]>(profile?.preferredJobTypes ?? []);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(profile?.preferredLocations ?? []);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(profile?.preferredRoles ?? []);
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
@@ -69,8 +76,15 @@ export default function EditProfileScreen() {
       setSelectedSkills(profile.skills ?? []);
       setSelectedTypes(profile.preferredJobTypes ?? []);
       setSelectedLocations(profile.preferredLocations ?? []);
+      setSelectedRoles(profile.preferredRoles ?? []);
     }
   }, [profile, reset]);
+
+  const toggleRole = (role: string) => {
+    setSelectedRoles(prev => 
+      prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
+    );
+  };
 
   const handlePickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -99,6 +113,7 @@ export default function EditProfileScreen() {
       skills: selectedSkills,
       preferredJobTypes: selectedTypes,
       preferredLocations: selectedLocations,
+      preferredRoles: selectedRoles,
     });
     if (result.success) {
       if (router.canGoBack()) router.back();
@@ -192,9 +207,21 @@ export default function EditProfileScreen() {
           </View>
         </Animated.View>
 
+        {/* Roles */}
+        <Animated.View entering={FadeInDown.delay(200).springify()}>
+          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }]}>
+            PREFERRED ROLES ({selectedRoles.length} selected)
+          </Text>
+          <View style={styles.skillsGrid}>
+            {ROLES.map((role) => (
+              <Chip key={role} label={role} selected={selectedRoles.includes(role)} onPress={() => toggleRole(role)} />
+            ))}
+          </View>
+        </Animated.View>
+
         {/* Skills */}
         <Animated.View entering={FadeInDown.delay(250).springify()}>
-          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }]}>
+          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, marginTop: 12 }]}>
             SKILLS ({selectedSkills.length} selected)
           </Text>
           <View style={styles.skillsGrid}>

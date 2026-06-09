@@ -22,7 +22,8 @@ export default function SearchScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { jobs, isLoading, hasMore, fetchJobs, fetchMoreJobs, saveJob, unsaveJob } = useJobsStore();
+  const { jobs, appliedJobs, isLoading, hasMore, fetchJobs, fetchMoreJobs, fetchAppliedJobs, saveJob, unsaveJob } = useJobsStore();
+  const [activeTab, setActiveTab] = useState<'discover' | 'applied'>('discover');
 
   const [keyword, setKeyword] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<JobType[]>([]);
@@ -80,7 +81,7 @@ export default function SearchScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
       <ScreenHeader 
         title="Jobs" 
-        subtitle="Discover new opportunities" 
+        subtitle={activeTab === 'discover' ? "Discover new opportunities" : "Your submitted applications"} 
         rightAction={
           <TouchableOpacity 
             onPress={() => router.push('/(student)/(tabs)/saved')} 
@@ -90,66 +91,92 @@ export default function SearchScreen() {
           </TouchableOpacity>
         }
       />
-      {/* Search bar */}
-      <View style={styles.topArea}>
-        <SearchBar
-          value={keyword}
-          onChangeText={handleSearch}
-          autoFocus={false}
-          style={{ flex: 1 }}
-        />
-        <TouchableOpacity 
-          style={styles.filterBtn}
-          onPress={() => setShowFilters(true)}
-        >
-          <SlidersHorizontal size={20} color={theme.colors.primary} />
-        </TouchableOpacity>
+      
+      {/* Tabs */}
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', backgroundColor: theme.colors.card, borderRadius: 12, padding: 4, borderWidth: 1, borderColor: theme.colors.border, flex: 1 }}>
+          <TouchableOpacity
+            style={{ flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8, backgroundColor: activeTab === 'discover' ? theme.colors.primary : 'transparent' }}
+            onPress={() => setActiveTab('discover')}
+          >
+            <Text style={{ fontFamily: theme.typography.fontFamily.semiBold, color: activeTab === 'discover' ? '#FFF' : theme.colors.textSecondary }}>Discover</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8, backgroundColor: activeTab === 'applied' ? theme.colors.primary : 'transparent' }}
+            onPress={() => {
+              setActiveTab('applied');
+              fetchAppliedJobs();
+            }}
+          >
+            <Text style={{ fontFamily: theme.typography.fontFamily.semiBold, color: activeTab === 'applied' ? '#FFF' : theme.colors.textSecondary }}>Applied</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Job type filters */}
-      <FlatList
-        horizontal
-        data={['Remote', ...JOB_TYPES.filter(t => t !== 'Remote')]}
-        keyExtractor={(item) => item}
-        showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0 }}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}
-        renderItem={({ item }) => {
-
-          if (item === 'Remote') {
-            return (
-              <Chip
-                label="🌐 Remote"
-                selected={isRemote === true}
-                onPress={() => {
-                  const newVal = isRemote === true ? undefined : true;
-                  setIsRemote(newVal);
-                  fetchJobs({ 
-                    keyword: keyword || undefined, 
-                    jobType: selectedTypes.length ? selectedTypes : undefined, 
-                    isRemote: newVal, 
-                    referralAvailable,
-                    datePosted: datePosted === 'all' ? undefined : datePosted,
-                    sortBy,
-                    matchUserSkills: false 
-                  }, true);
-                }}
-              />
-            );
-          }
-          return (
-            <Chip
-              label={item}
-              selected={selectedTypes.includes(item as JobType)}
-              onPress={() => toggleJobType(item as JobType)}
+      {/* Search bar */}
+      {activeTab === 'discover' && (
+        <>
+          <View style={styles.topArea}>
+            <SearchBar
+              value={keyword}
+              onChangeText={handleSearch}
+              autoFocus={false}
+              style={{ flex: 1 }}
             />
-          );
-        }}
-      />
+            <TouchableOpacity 
+              style={styles.filterBtn}
+              onPress={() => setShowFilters(true)}
+            >
+              <SlidersHorizontal size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
 
+          {/* Job type filters */}
+          <FlatList
+            horizontal
+            data={['Remote', ...JOB_TYPES.filter(t => t !== 'Remote')]}
+            keyExtractor={(item) => item}
+            showsHorizontalScrollIndicator={false}
+            style={{ flexGrow: 0 }}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}
+            ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
+            renderItem={({ item }) => {
+
+              if (item === 'Remote') {
+                return (
+                  <Chip
+                    label="🌐 Remote"
+                    selected={isRemote === true}
+                    onPress={() => {
+                      const newVal = isRemote === true ? undefined : true;
+                      setIsRemote(newVal);
+                      fetchJobs({ 
+                        keyword: keyword || undefined, 
+                        jobType: selectedTypes.length ? selectedTypes : undefined, 
+                        isRemote: newVal, 
+                        referralAvailable,
+                        datePosted: datePosted === 'all' ? undefined : datePosted,
+                        sortBy,
+                        matchUserSkills: false 
+                      }, true);
+                    }}
+                  />
+                );
+              }
+              return (
+                <Chip
+                  label={item}
+                  selected={selectedTypes.includes(item as JobType)}
+                  onPress={() => toggleJobType(item as JobType)}
+                />
+              );
+            }}
+          />
+        </>
+      )}
       {/* Results */}
       <FlatList
-        data={jobs}
+        data={activeTab === 'discover' ? jobs : appliedJobs}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
         renderItem={({ item, index }) => (
@@ -161,7 +188,7 @@ export default function SearchScreen() {
           />
         )}
         ListHeaderComponent={
-          keyword || selectedTypes.length > 0 || isRemote ? (
+          activeTab === 'discover' && (keyword || selectedTypes.length > 0 || isRemote) ? (
             <Text style={[styles.resultsText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
               {jobs.length} results
             </Text>
@@ -172,8 +199,8 @@ export default function SearchScreen() {
             <View>{[...Array(3)].map((_, i) => <JobCardSkeleton key={i} />)}</View>
           ) : (
             <EmptyState
-              title={keyword ? 'No results found' : 'Search for jobs'}
-              description={keyword ? 'Try different keywords or filters' : 'Enter a job title, skill, or company name'}
+              title={activeTab === 'discover' ? (keyword ? 'No results found' : 'Search for jobs') : "No applied jobs yet"}
+              description={activeTab === 'discover' ? (keyword ? 'Try different keywords or filters' : 'Enter a job title, skill, or company name') : "Jobs you apply to will appear here"}
             />
           )
         }

@@ -10,6 +10,11 @@ export const jobsApi = {
     };
   },
 
+  fetchAppliedJobs: async (): Promise<Job[]> => {
+    const { data } = await api.get('/jobs/me/applied');
+    return data.data.map(mapJob);
+  },
+
   fetchById: async (id: string): Promise<Job> => {
     const { data } = await api.get(`/jobs/${id}`);
     return mapJob(data);

@@ -71,12 +71,14 @@ export default function StudentHomeScreen() {
   };
 
   const renderItem = useCallback(({ item, index }: any) => (
-    <JobCard
-      job={item}
-      index={index}
-      onPress={() => router.push(`/(student)/job/${item.id}`)}
-      onSave={() => handleSaveToggle(item.id, item.isSaved ?? false)}
-    />
+    <View style={{ paddingHorizontal: 16 }}>
+      <JobCard
+        job={item}
+        index={index}
+        onPress={() => router.push(`/(student)/job/${item.id}`)}
+        onSave={() => handleSaveToggle(item.id, item.isSaved ?? false)}
+      />
+    </View>
   ), []);
 
   const [showFilters, setShowFilters] = useState(false);
@@ -187,7 +189,8 @@ export default function StudentHomeScreen() {
             data={recommendedJobs}
             keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: 16 }}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
+            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
             renderItem={({ item, index }) => (
               <JobCard
                 job={item}
@@ -216,7 +219,8 @@ export default function StudentHomeScreen() {
           keyExtractor={(item) => item}
           showsHorizontalScrollIndicator={false}
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingLeft: 16, paddingRight: 16, gap: 8 }}
+          contentContainerStyle={{ paddingLeft: 16, paddingRight: 0 }}
+          ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
           renderItem={({ item }) => (
             <Chip
               label={item}
@@ -272,15 +276,15 @@ export default function StudentHomeScreen() {
           data={jobs}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
-          ListHeaderComponent={renderHeader}
+          ListHeaderComponent={renderHeader()}
           ListEmptyComponent={
             <EmptyState
               title="No jobs found"
               description="Try adjusting your filters or search terms"
             />
           }
-          ListFooterComponent={isLoadingMore ? <JobCardSkeleton /> : null}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          ListFooterComponent={isLoadingMore ? <View style={{ paddingHorizontal: 16 }}><JobCardSkeleton /></View> : null}
+          contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           onEndReached={hasMore ? fetchMoreJobs : undefined}
           onEndReachedThreshold={0.4}
@@ -358,6 +362,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   sectionTitle: { fontSize: 18 },
   sectionCount: { fontSize: 13 },

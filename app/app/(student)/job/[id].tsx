@@ -25,7 +25,7 @@ export default function JobDetailScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { selectedJob, isLoading, fetchJobById, saveJob, unsaveJob } = useJobsStore();
+  const { selectedJob, isLoading, fetchJobById, saveJob, unsaveJob, applyJob } = useJobsStore();
 
   useEffect(() => {
     if (id) fetchJobById(id);
@@ -41,9 +41,10 @@ export default function JobDetailScreen() {
   const handleApply = async () => {
     if (job.applyLink) {
       try {
-        await jobsApi.incrementApplications(job.id);
+        await applyJob(job.id);
+        Alert.alert('Success', 'Application submitted successfully! This job is now in your Applied tab.');
       } catch (err) {
-        console.warn('Failed to increment applications', err);
+        console.warn('Failed to apply', err);
       }
       Linking.openURL(job.applyLink);
     }

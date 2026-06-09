@@ -47,11 +47,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       // Check if token is expired (basic client-side check)
       // You could also ping an /api/auth/me route if you implement one
       
+      let onboardingComplete = false;
+      if (session.user.user_metadata.role === 'student') {
+        try {
+          const profileRes = await api.get('/profile');
+          onboardingComplete = profileRes.data?.onboarding_complete ?? false;
+        } catch(e) {
+          console.warn('Failed to fetch profile in initialize', e);
+        }
+      }
+
       const user: AuthUser = {
         id: session.user.id,
         email: session.user.email,
         role: session.user.user_metadata.role as UserRole,
         emailVerified: true,
+        onboardingComplete,
         createdAt: new Date().toISOString(),
       };
 
@@ -70,11 +81,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       
       await storage.set(STORAGE_KEYS.AUTH_SESSION, session);
 
+      let onboardingComplete = false;
+      if (session.user.user_metadata.role === 'student') {
+        try {
+          const profileRes = await api.get('/profile');
+          onboardingComplete = profileRes.data?.onboarding_complete ?? false;
+        } catch(e) {}
+      }
+
       const user: AuthUser = {
         id: session.user.id,
         email: session.user.email,
         role: session.user.user_metadata.role as UserRole,
         emailVerified: true,
+        onboardingComplete,
         createdAt: new Date().toISOString(),
       };
 
@@ -100,6 +120,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         email: session.user.email,
         role: session.user.user_metadata.role as UserRole,
         emailVerified: true,
+        onboardingComplete: false,
         createdAt: new Date().toISOString(),
       };
 

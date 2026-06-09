@@ -30,6 +30,7 @@ function mapProfile(raw: any): StudentProfile {
     resumeUrl: raw.resume_url,
     preferredJobTypes: raw.preferred_job_types ?? [],
     preferredLocations: raw.preferred_locations ?? [],
+    preferredRoles: raw.preferred_roles ?? [],
     preferredSalaryMin: raw.preferred_salary_min,
     onboardingComplete: raw.onboarding_complete,
     createdAt: raw.created_at,
@@ -40,5 +41,6 @@ function mapProfile(raw: any): StudentProfile {
     notificationsEnabled: raw.notifications_enabled ?? true,
     emailNotifications: raw.email_notifications ?? true,
     profileComplete: raw.profile_complete ?? false,
+    location: raw.location ?? '',
   };
 }

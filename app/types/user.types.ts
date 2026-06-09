@@ -22,6 +22,7 @@ export interface StudentProfile {
   languages: string[];
   preferredJobTypes: string[];
   preferredLocations: string[];
+  preferredRoles: string[];
   preferredSalaryMin: number | null;
 
   // Resume
@@ -62,6 +63,7 @@ export interface UpdateStudentPayload {
   languages?: string[];
   preferredJobTypes?: string[];
   preferredLocations?: string[];
+  preferredRoles?: string[];
   preferredSalaryMin?: number;
   resumeUrl?: string;
   resumeName?: string;

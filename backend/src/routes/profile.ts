@@ -41,6 +41,7 @@ router.put('/', async (req, res) => {
       preferred_job_types: updates.preferredJobTypes,
       preferred_locations: updates.preferredLocations,
       preferred_salary_min: updates.preferredSalaryMin,
+      preferred_roles: updates.preferredRoles,
       onboarding_complete: updates.onboardingComplete,
     };
 

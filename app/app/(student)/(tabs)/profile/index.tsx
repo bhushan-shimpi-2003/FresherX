@@ -120,6 +120,18 @@ export default function StudentProfileScreen() {
           </Animated.View>
         )}
 
+        {/* Preferred Roles */}
+        {profile?.preferredRoles && profile.preferredRoles.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(180).springify()} style={[styles.section, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
+              Preferred Roles
+            </Text>
+            <View style={styles.skills}>
+              {profile.preferredRoles.map((role) => <Badge key={role} label={role} variant="success" />)}
+            </View>
+          </Animated.View>
+        )}
+
         {/* Skills */}
         {profile?.skills && profile.skills.length > 0 && (
           <Animated.View entering={FadeInDown.delay(200).springify()} style={[styles.section, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>

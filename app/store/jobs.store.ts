@@ -7,6 +7,7 @@ import { PAGE_SIZE } from '../constants/config';
 interface JobsStore {
   jobs: Job[];
   savedJobs: Job[];
+  appliedJobs: Job[];
   recommendedJobs: Job[];
   selectedJob: Job | null;
   filters: JobFilters;
@@ -24,8 +25,10 @@ interface JobsStore {
   fetchRecommendedJobs: () => Promise<void>;
   fetchJobById: (id: string) => Promise<void>;
   fetchSavedJobs: (userId: string) => Promise<void>;
+  fetchAppliedJobs: () => Promise<void>;
   saveJob: (jobId: string, userId: string) => Promise<void>;
   unsaveJob: (jobId: string, userId: string) => Promise<void>;
+  applyJob: (jobId: string) => Promise<void>;
   setFilters: (filters: JobFilters) => void;
   clearFilters: () => void;
   setSelectedJob: (job: Job | null) => void;
@@ -35,6 +38,7 @@ interface JobsStore {
 export const useJobsStore = create<JobsStore>((set, get) => ({
   jobs: [],
   savedJobs: [],
+  appliedJobs: [],
   recommendedJobs: [],
   selectedJob: null,
   filters: {},
@@ -143,5 +147,32 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
           : state.selectedJob,
       }));
     } catch {}
+  },
+
+  fetchAppliedJobs: async () => {
+    try {
+      const jobs = await jobsApi.fetchAppliedJobs();
+      set({ appliedJobs: jobs });
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
+  applyJob: async (jobId) => {
+    try {
+      await jobsApi.incrementApplications(jobId);
+      // Move from jobs to appliedJobs (optimistically)
+      set((state) => {
+        const appliedJob = state.jobs.find(j => j.id === jobId) || state.recommendedJobs.find(j => j.id === jobId) || state.selectedJob;
+        return {
+          jobs: state.jobs.filter(j => j.id !== jobId),
+          recommendedJobs: state.recommendedJobs.filter(j => j.id !== jobId),
+          appliedJobs: appliedJob ? [appliedJob, ...state.appliedJobs] : state.appliedJobs,
+        };
+      });
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   },
 }));
