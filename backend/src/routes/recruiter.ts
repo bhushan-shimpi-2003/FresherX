@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
 import { NotificationService } from '../services/notification.service';
+import { getDateStringIST } from '../utils/timezone';
 
 const router = Router();
 router.use(requireAuth);
@@ -279,7 +280,7 @@ router.get('/stats', async (req, res) => {
       const d = new Date(sevenDaysAgo);
       d.setDate(d.getDate() + i);
       return {
-        date: d.toISOString().split('T')[0],
+        date: getDateStringIST(d),
         label: d.toLocaleDateString('en-US', { weekday: 'short' })[0],
         value: 0
       };
@@ -295,7 +296,7 @@ router.get('/stats', async (req, res) => {
 
       if (recentApps) {
         recentApps.forEach((app: any) => {
-          const dateStr = app.created_at.split('T')[0];
+          const dateStr = getDateStringIST(app.created_at);
           const dayStats = applicationsChart.find(d => d.date === dateStr);
           if (dayStats) dayStats.value += 1;
         });

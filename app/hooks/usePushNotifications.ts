@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
-import { getMessaging, onTokenRefresh, onMessage, onNotificationOpenedApp, getInitialNotification, requestPermission, registerDeviceForRemoteMessages, getToken, AuthorizationStatus } from '@react-native-firebase/messaging';
+import { getMessaging, onTokenRefresh, onMessage, onNotificationOpenedApp, getInitialNotification, requestPermission, hasPermission, registerDeviceForRemoteMessages, getToken, AuthorizationStatus } from '@react-native-firebase/messaging';
 import notifee, { EventType } from '@notifee/react-native';
 import { useAuthStore } from '../store/auth.store';
 import { useRouter } from 'expo-router';
@@ -15,7 +15,7 @@ export function usePushNotifications() {
     if (Platform.OS === 'web') return;
     
     if (status === 'authenticated' && user && !isRegistered.current) {
-      registerForPushNotifications();
+      registerForPushNotifications(false); // Do not ask for permission automatically
     }
   }, [status, user]);
 
@@ -70,14 +70,28 @@ export function usePushNotifications() {
     };
   }, [user]);
 
-  const registerForPushNotifications = async () => {
+  const registerForPushNotifications = async (askPermission = false) => {
     if (Platform.OS === 'web') return;
 
     try {
       const messaging = getMessaging();
 
-      // 1. Request Permission
-      const authStatus = await requestPermission(messaging);
+      // Check current permission first
+      let authStatus = await hasPermission(messaging);
+
+      // If not determined, and we are not explicitly asking, skip
+      if (authStatus === AuthorizationStatus.NOT_DETERMINED && !askPermission) {
+        return;
+      }
+
+      // 1. Request Permission if needed
+      if (
+        (authStatus === AuthorizationStatus.NOT_DETERMINED || authStatus === AuthorizationStatus.DENIED) && 
+        askPermission
+      ) {
+        authStatus = await requestPermission(messaging);
+      }
+
       const enabled =
         authStatus === AuthorizationStatus.AUTHORIZED ||
         authStatus === AuthorizationStatus.PROVISIONAL;
@@ -146,5 +160,9 @@ export function usePushNotifications() {
     if (data?.job_id) {
       router.push(`/(student)/job/${data.job_id}`);
     }
+  };
+
+  return {
+    requestPushPermission: () => registerForPushNotifications(true)
   };
 }

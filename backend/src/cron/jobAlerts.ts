@@ -73,5 +73,7 @@ export const runJobAlerts = async () => {
 export const startJobAlertsCron = () => {
   console.log('Starting Job Expiration Alerts Cron Job...');
   // Run every 5 minutes
-  cron.schedule('*/5 * * * *', runJobAlerts);
+  cron.schedule('*/5 * * * *', runJobAlerts, {
+    timezone: 'Asia/Kolkata',
+  });
 };

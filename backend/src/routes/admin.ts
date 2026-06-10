@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
 import { NotificationService } from '../services/notification.service';
+import { formatToIST } from '../utils/timezone';
 
 const router = Router();
 
@@ -224,33 +225,44 @@ router.post('/jobs/:id/review', async (req, res) => {
         .single();
         
       if (job) {
-        // Find all students to notify them about the new job
-        const { data: allStudents } = await supabaseAdmin
-          .from('profiles')
-          .select('id')
-          .eq('role', 'student');
+        // Run asynchronously to prevent blocking the response and timing out
+        (async () => {
+          try {
+            // Find all students to notify them about the new job
+            const { data: allStudents } = await supabaseAdmin
+              .from('profiles')
+              .select('id')
+              .eq('role', 'student');
 
-        if (allStudents && allStudents.length > 0) {
-          const notifications = allStudents.map(student => ({
-            user_id: student.id,
-            title: 'New Job Posted!',
-            body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
-            type: 'new_job',
-            data: { job_id: id }
-          }));
-          // Insert notifications in batches if needed, but for now we do it in one go
-          await supabaseAdmin.from('notifications').insert(notifications);
+            if (allStudents && allStudents.length > 0) {
+              // Batch inserts to prevent Supabase payload limits
+              const chunkSize = 500;
+              for (let i = 0; i < allStudents.length; i += chunkSize) {
+                const chunk = allStudents.slice(i, i + chunkSize);
+                const notifications = chunk.map(student => ({
+                  user_id: student.id,
+                  title: 'New Job Posted!',
+                  body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
+                  type: 'new_job',
+                  data: { job_id: id }
+                }));
+                await supabaseAdmin.from('notifications').insert(notifications);
+              }
 
-          // Send actual FCM push notifications
-          await NotificationService.sendToUsers(
-            allStudents.map(student => student.id),
-            {
-              title: 'New Job Posted!',
-              body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
-              data: { job_id: id }
+              // Send actual FCM push notifications
+              await NotificationService.sendToUsers(
+                allStudents.map(student => student.id),
+                {
+                  title: 'New Job Posted!',
+                  body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
+                  data: { job_id: id }
+                }
+              );
             }
-          );
-        }
+          } catch (err) {
+            console.error('Error sending mass notifications for approved job:', err);
+          }
+        })();
       }
 
       // Notify recruiter of approval
@@ -496,7 +508,7 @@ router.get('/export/users', async (req, res) => {
         escapeCSV(p.email),
         escapeCSV(p.full_name),
         escapeCSV(p.role),
-        escapeCSV(p.created_at)
+        escapeCSV(formatToIST(p.created_at))
       ].join(',') + '\n';
     });
 
@@ -532,7 +544,7 @@ router.get('/export/jobs', async (req, res) => {
         escapeCSV(j.job_type),
         escapeCSV(j.status),
         escapeCSV(recruiterName),
-        escapeCSV(j.created_at)
+        escapeCSV(formatToIST(j.created_at))
       ].join(',') + '\n';
     });
 

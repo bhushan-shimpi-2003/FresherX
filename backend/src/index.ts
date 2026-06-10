@@ -5,13 +5,25 @@ import dotenv from 'dotenv';
 // Load env
 dotenv.config();
 
+// Set default timezone for Node.js process (useful for local development and Vercel base)
+process.env.TZ = 'Asia/Kolkata';
+
+import { formatToIST } from './utils/timezone';
+
 // Create express app
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (e.g. Vercel)
 const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${formatToIST(new Date())}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Basic health check
 app.get('/api/health', (req, res) => {
