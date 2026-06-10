@@ -30,7 +30,9 @@ jobs:
         # 6. Prevents the workflow from failing due to transient network issues (|| true ensures the step succeeds even if curl fails)
         run: |
           echo "Pinging Health API to prevent cold starts..."
-          curl --request GET \
+          
+          # Capture the response body and the HTTP status code
+          RESPONSE=$(curl --request GET \
                --url "$HEALTH_URL" \
                --max-time 10 \
                --retry 3 \
@@ -38,12 +40,22 @@ jobs:
                --retry-all-errors \
                --silent \
                --show-error \
-               --write-out "\n\nHTTP Status: %{http_code}\n" || true
+               --write-out "HTTP_STATUS:%{http_code}") || true
+               
+          # Extract body and status
+          HTTP_BODY=$(echo "$RESPONSE" | sed -e 's/HTTP_STATUS\:.*//g')
+          HTTP_STATUS=$(echo "$RESPONSE" | tr -d '\n' | sed -e 's/.*HTTP_STATUS://')
+          
+          echo "========================================="
+          echo "API Response Body: $HTTP_BODY"
+          echo "API Status Code: $HTTP_STATUS"
+          echo "========================================="
 
       - name: Ping Job Alerts Endpoint
         run: |
           echo "Triggering Job Expiration Alerts..."
-          curl --request GET \
+          
+          RESPONSE=$(curl --request GET \
                --url "$CRON_URL" \
                --max-time 30 \
                --retry 2 \
@@ -51,4 +63,12 @@ jobs:
                --retry-all-errors \
                --silent \
                --show-error \
-               --write-out "\n\nHTTP Status: %{http_code}\n" || true
+               --write-out "HTTP_STATUS:%{http_code}") || true
+               
+          HTTP_BODY=$(echo "$RESPONSE" | sed -e 's/HTTP_STATUS\:.*//g')
+          HTTP_STATUS=$(echo "$RESPONSE" | tr -d '\n' | sed -e 's/.*HTTP_STATUS://')
+          
+          echo "========================================="
+          echo "API Response Body: $HTTP_BODY"
+          echo "API Status Code: $HTTP_STATUS"
+          echo "========================================="
