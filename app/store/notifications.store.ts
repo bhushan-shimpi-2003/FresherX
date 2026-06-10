@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase/client';
+import { notificationsApi } from '../services/api/notifications.api';
 
 export type NotificationType = 'new_job' | 'deadline' | 'saved_job' | 'application' | 'system';
 
@@ -49,24 +50,7 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
   fetchNotifications: async (userId) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      const notifications: Notification[] = (data ?? []).map((n: any) => ({
-        id: n.id,
-        userId: n.user_id,
-        type: n.type,
-        title: n.title,
-        body: n.body,
-        data: n.data,
-        isRead: n.is_read,
-        createdAt: n.created_at,
-      }));
+      const notifications = await notificationsApi.fetchNotifications(userId);
       const unreadCount = notifications.filter((n) => !n.isRead).length;
       set({ notifications, unreadCount, isLoading: false });
     } catch (err: any) {
@@ -76,11 +60,7 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
 
   markAsRead: async (notificationId) => {
     try {
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
+      await notificationsApi.markAsRead(notificationId);
       set((state) => ({
         notifications: state.notifications.map((n) =>
           n.id === notificationId ? { ...n, isRead: true } : n
@@ -92,12 +72,7 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
 
   markAllAsRead: async (userId) => {
     try {
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', userId)
-        .eq('is_read', false);
-
+      await notificationsApi.markAllAsRead(userId);
       set((state) => ({
         notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
         unreadCount: 0,

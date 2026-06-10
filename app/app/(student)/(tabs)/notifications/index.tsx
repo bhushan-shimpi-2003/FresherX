@@ -14,7 +14,7 @@ import { Bell, CheckCheck } from 'lucide-react-native';
 export default function NotificationsScreen() {
   const theme = useTheme();
   const { user } = useAuthStore();
-  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead } = useNotificationsStore();
+  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead, error } = useNotificationsStore();
   const [filter, setFilter] = React.useState<string>('all');
 
 
@@ -79,25 +79,28 @@ export default function NotificationsScreen() {
       {isLoading ? (
         <Loader fullScreen />
       ) : (
-        <FlatList
-          data={filteredNotifications}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <NotificationCard
-              notification={item}
-              index={index}
-              onPress={() => !item.isRead && markAsRead(item.id)}
-            />
-          )}
-          ListEmptyComponent={
-            <EmptyState
-              icon={<Bell size={48} color={theme.colors.textMuted} />}
-              title="No notifications yet"
-              description="We'll notify you about new jobs, deadlines, and updates"
-            />
-          }
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={{ flex: 1 }}>
+          {error && <Text style={{ color: 'red', textAlign: 'center', margin: 16 }}>Error: {error}</Text>}
+          <FlatList
+            data={filteredNotifications}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item, index }) => (
+              <NotificationCard
+                notification={item}
+                index={index}
+                onPress={() => !item.isRead && markAsRead(item.id)}
+              />
+            )}
+            ListEmptyComponent={
+              <EmptyState
+                icon={<Bell size={48} color={theme.colors.textMuted} />}
+                title="No notifications yet"
+                description="We'll notify you about new jobs, deadlines, and updates"
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
       )}
     </SafeAreaView>
   );

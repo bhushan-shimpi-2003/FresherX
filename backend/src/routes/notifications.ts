@@ -29,7 +29,7 @@ router.patch('/:id/read', async (req, res) => {
 
     const { error } = await supabaseAdmin
       .from('notifications')
-      .update({ read: true })
+      .update({ is_read: true })
       .eq('id', id)
       .eq('user_id', userId);
 
@@ -46,9 +46,9 @@ router.post('/read-all', async (req, res) => {
 
     const { error } = await supabaseAdmin
       .from('notifications')
-      .update({ read: true })
+      .update({ is_read: true })
       .eq('user_id', userId)
-      .eq('read', false);
+      .eq('is_read', false);
 
     if (error) throw error;
     res.json({ success: true });

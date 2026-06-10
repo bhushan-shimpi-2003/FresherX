@@ -47,7 +47,7 @@ export interface Notification {
   body: string;
   type: string;
   data?: any;
-  read: boolean;
+  isRead: boolean;
   createdAt: string;
 }
 

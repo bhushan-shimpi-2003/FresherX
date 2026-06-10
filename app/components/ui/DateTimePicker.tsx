@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { View, Platform, TouchableOpacity, Text } from 'react-native';
-import DateTimePickerNative from '@react-native-community/datetimepicker';
+import React from 'react';
+import { View, Platform, Text } from 'react-native';
 import { Input } from './Input';
 import { useTheme } from '../../theme';
 import { Calendar } from 'lucide-react-native';
@@ -14,11 +13,8 @@ interface DateTimePickerProps {
 
 export function DateTimePicker({ label, value, onChangeText, error }: DateTimePickerProps) {
   const theme = useTheme();
-  const [show, setShow] = useState(false);
-  const [mode, setMode] = useState<'date' | 'time'>('date');
-  const dateObj = value ? new Date(value) : new Date();
 
-  // On Web, we can just use the native HTML5 input type="datetime-local"
+  // On Web, we can just use the native HTML5 input type="date"
   if (Platform.OS === 'web') {
     return (
       <View style={{ marginBottom: 16 }}>
@@ -61,50 +57,17 @@ export function DateTimePicker({ label, value, onChangeText, error }: DateTimePi
     );
   }
 
-  // Native iOS/Android implementation
-  const handleChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShow(false);
-    }
-    
-    if (selectedDate) {
-      // Just keep the date part, append a standard time so it parses correctly but we only care about the date
-      const newStr = selectedDate.toISOString().split('T')[0];
-      onChangeText(newStr);
-    }
-  };
-
-  const showDatepicker = () => {
-    setMode('date');
-    setShow(true);
-  };
-
-  const displayValue = value ? new Date(value).toLocaleDateString() : '';
-
+  // Fallback text input for native mobile (YYYY-MM-DD)
   return (
     <View>
-      <TouchableOpacity onPress={showDatepicker} activeOpacity={0.8}>
-        <View pointerEvents="none">
-          <Input
-            label={label}
-            value={displayValue}
-            placeholder="Select Date & Time"
-            error={error}
-            rightIcon={<Calendar size={20} color={theme.colors.textMuted} />}
-            editable={false}
-          />
-        </View>
-      </TouchableOpacity>
-
-      {show && (
-        <DateTimePickerNative
-          testID="dateTimePicker"
-          value={dateObj}
-          mode={mode}
-          is24Hour={true}
-          onChange={handleChange}
-        />
-      )}
+      <Input
+        label={label}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder="YYYY-MM-DD"
+        error={error}
+        rightIcon={<Calendar size={20} color={theme.colors.textMuted} />}
+      />
     </View>
   );
 }

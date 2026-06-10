@@ -44,6 +44,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return;
       }
 
+      await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
+
       // Check if token is expired (basic client-side check)
       // You could also ping an /api/auth/me route if you implement one
       
@@ -80,6 +85,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const { session } = response.data;
       
       await storage.set(STORAGE_KEYS.AUTH_SESSION, session);
+      await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
 
       let onboardingComplete = false;
       if (session.user.user_metadata.role === 'student') {
@@ -114,6 +123,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const { session } = response.data;
       
       await storage.set(STORAGE_KEYS.AUTH_SESSION, session);
+      await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
 
       const user: AuthUser = {
         id: session.user.id,

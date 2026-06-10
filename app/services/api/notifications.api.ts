@@ -1,5 +1,5 @@
 import api from '../axios';
-import type { Notification } from '../../types/user.types';
+import type { Notification } from '../../store/notifications.store';
 
 export const notificationsApi = {
   fetchNotifications: async (userId: string): Promise<Notification[]> => {
@@ -11,7 +11,7 @@ export const notificationsApi = {
       body: raw.body,
       type: raw.type,
       data: raw.data,
-      read: raw.read,
+      isRead: raw.is_read,
       createdAt: raw.created_at,
     }));
   },
