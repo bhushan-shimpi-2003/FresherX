@@ -15,7 +15,7 @@ export function usePushNotifications() {
     if (Platform.OS === 'web') return;
     
     if (status === 'authenticated' && user && !isRegistered.current) {
-      registerForPushNotifications(false); // Do not ask for permission automatically
+      registerForPushNotifications(true); // Automatically ask for permission on login
     }
   }, [status, user]);
 
