@@ -28,6 +28,7 @@ import notificationRoutes from './routes/notifications';
 import authRoutes from './routes/auth';
 import shareRoutes from './routes/share';
 import fcmRoutes from './routes/fcm';
+import cronRoutes from './routes/cron';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -37,6 +38,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/saved', savedRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/fcm', fcmRoutes);
+app.use('/api/cron', cronRoutes);
 app.use('/s', shareRoutes);
 
 // Error handling middleware
@@ -47,10 +49,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 import { startJobAlertsCron } from './cron/jobAlerts';
 
-// Start server
-app.listen(port, () => {
-  console.log(`🚀 Backend server running on http://localhost:${port}`);
-  
-  // Start background jobs
-  startJobAlertsCron();
-});
+// Start server if not in production (Vercel uses the exported app)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`🚀 Backend server running on http://localhost:${port}`);
+    
+    // Start background jobs (local only)
+    startJobAlertsCron();
+  });
+}
+
+// Export the Express API for Vercel
+export default app;
