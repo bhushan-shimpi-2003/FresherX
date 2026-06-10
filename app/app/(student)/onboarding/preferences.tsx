@@ -10,6 +10,7 @@ import { Chip } from '../../../components/ui/Chip';
 import { useUserStore } from '../../../store/user.store';
 import { useAuthStore } from '../../../store/auth.store';
 import { JOB_TYPES } from '../../../constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PreferencesScreen() {
   const theme = useTheme();
@@ -34,7 +35,13 @@ export default function PreferencesScreen() {
       onboardingComplete: true,
     });
     if (result.success) {
-      router.replace('/(student)/home');
+      const pendingJobId = await AsyncStorage.getItem('pending_job_id');
+      if (pendingJobId) {
+        await AsyncStorage.removeItem('pending_job_id');
+        router.replace(`/(student)/job/${pendingJobId}`);
+      } else {
+        router.replace('/(student)/home');
+      }
     }
   };
 

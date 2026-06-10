@@ -56,6 +56,13 @@
             ]
           }
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-2920036380008137~9156982476",
+          "iosAppId": "ca-app-pub-2920036380008137~9156982476"
+        }
       ]
     ]
   }

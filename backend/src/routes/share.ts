@@ -6,10 +6,10 @@ router.get('/job/:id', (req, res) => {
   const { id } = req.params;
   
   // Custom URI Scheme defined in your app.json (e.g., fresherx://)
-  const appScheme = `fresherx://job/${id}`;
+  const appScheme = `fresherx://(student)/job/${id}`;
   
   // The Play Store URL for your app
-  const playStoreId = 'com.fresherx.app';
+  const playStoreId = 'com.FreshrX';
   const referrer = `job_id=${id}`;
   // Properly URI-encode the referrer string for the Play Store URL
   const playStoreUrl = `https://play.google.com/store/apps/details?id=${playStoreId}&referrer=${encodeURIComponent(referrer)}`;

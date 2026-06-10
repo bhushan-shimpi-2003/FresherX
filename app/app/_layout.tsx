@@ -56,6 +56,24 @@ export default function RootLayout() {
     async function bootstrap() {
       await loadSettings();
       await initialize();
+      
+      if (Platform.OS === 'android') {
+        try {
+          const hasChecked = await AsyncStorage.getItem('has_checked_referrer');
+          if (!hasChecked) {
+            const referrer = await Application.getInstallReferrerAsync();
+            if (referrer && referrer.includes('job_id=')) {
+              const match = referrer.match(/job_id=([^&]+)/);
+              if (match && match[1]) {
+                await AsyncStorage.setItem('pending_job_id', match[1]);
+              }
+            }
+            await AsyncStorage.setItem('has_checked_referrer', 'true');
+          }
+        } catch (e) {
+          console.warn('Failed to read install referrer', e);
+        }
+      }
     }
     bootstrap();
   }, []);
@@ -72,38 +90,21 @@ export default function RootLayout() {
         } else if (status === 'authenticated' && user) {
           // Only redirect from index or auth group to prevent interrupting deep links
           if (pathname === '/' || inAuthGroup) {
-            
-            let hasPendingReferrer = false;
-            if (Platform.OS === 'android') {
-              try {
-                const hasChecked = await AsyncStorage.getItem('has_checked_referrer');
-                if (!hasChecked) {
-                  const referrer = await Application.getInstallReferrerAsync();
-                  if (referrer && referrer.includes('job_id=')) {
-                    const match = referrer.match(/job_id=([^&]+)/);
-                    if (match && match[1]) {
-                      hasPendingReferrer = true;
-                      router.replace(`/(student)/job/${match[1]}`);
-                    }
-                  }
-                  await AsyncStorage.setItem('has_checked_referrer', 'true');
-                }
-              } catch (e) {
-                console.warn('Failed to read install referrer', e);
-              }
-            }
-
-            if (!hasPendingReferrer) {
-              if (user.role === 'student') {
-                if (user.onboardingComplete === false) {
-                  router.replace('/(auth)/onboarding');
+            if (user.role === 'student') {
+              if (user.onboardingComplete === false) {
+                router.replace('/(auth)/onboarding');
+              } else {
+                const pendingJobId = await AsyncStorage.getItem('pending_job_id');
+                if (pendingJobId) {
+                  await AsyncStorage.removeItem('pending_job_id');
+                  router.replace(`/(student)/job/${pendingJobId}`);
                 } else {
                   router.replace('/(student)/home');
                 }
               }
-              else if (user.role === 'recruiter') router.replace('/(recruiter)/dashboard');
-              else if (user.role === 'admin') router.replace('/(admin)/dashboard');
             }
+            else if (user.role === 'recruiter') router.replace('/(recruiter)/dashboard');
+            else if (user.role === 'admin') router.replace('/(admin)/dashboard');
           }
         }
       };

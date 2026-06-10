@@ -2,6 +2,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, Share, Alert } from 'react-native';
+import { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import {
@@ -21,11 +22,40 @@ import { palette } from '../../../constants/colors';
 import { jobsApi } from '@/services/api/jobs.api';
 
 export default function JobDetailScreen() {
+  const adUnitId = __DEV__ ? TestIds.REWARDED : 'ca-app-pub-2920036380008137/1229515288';
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuthStore();
   const { selectedJob, isLoading, fetchJobById, saveJob, unsaveJob, applyJob } = useJobsStore();
+  
+  const [adLoaded, setAdLoaded] = React.useState(false);
+  const rewardedRef = React.useRef<RewardedAd | null>(null);
+
+  useEffect(() => {
+    const rewarded = RewardedAd.createForAdRequest(adUnitId, {
+      requestNonPersonalizedAdsOnly: true,
+    });
+    rewardedRef.current = rewarded;
+
+    const unsubscribeLoaded = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      setAdLoaded(true);
+    });
+
+    const unsubscribeEarned = rewarded.addAdEventListener(
+      RewardedAdEventType.EARNED_REWARD,
+      reward => {
+        console.log('User earned reward of ', reward);
+      },
+    );
+
+    rewarded.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeEarned();
+    };
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -49,7 +79,27 @@ export default function JobDetailScreen() {
       } catch (err) {
         console.warn('Failed to apply', err);
       }
-      Linking.openURL(job.applyLink);
+      
+      const openApplyLink = () => Linking.openURL(job.applyLink!);
+
+      if (rewardedRef.current && adLoaded) {
+        const unsubscribeClosed = rewardedRef.current.addAdEventListener(AdEventType.CLOSED, () => {
+          openApplyLink();
+          unsubscribeClosed();
+          // Reset and reload the ad
+          setAdLoaded(false);
+          rewardedRef.current?.load();
+        });
+        
+        try {
+          rewardedRef.current.show();
+        } catch (e) {
+          console.warn('Failed to show ad', e);
+          openApplyLink();
+        }
+      } else {
+        openApplyLink();
+      }
     }
   };
 
