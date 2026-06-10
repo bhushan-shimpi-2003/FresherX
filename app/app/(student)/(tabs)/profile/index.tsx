@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   Edit3, GraduationCap,
-  Briefcase, Mail, Phone, Moon, Sun, Bell, Globe, Shield, LogOut, ChevronRight
+  Briefcase, Mail, Phone, Moon, Sun, Bell, Globe, Shield, LogOut, ChevronRight, Lock
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../../theme';
@@ -129,13 +129,22 @@ export default function StudentProfileScreen() {
             </View>
           </View>
 
-          <Button
-            label="Edit Profile"
-            variant="outline"
-            size="sm"
-            leftIcon={<Edit3 size={15} color={theme.colors.primary} />}
-            onPress={() => router.push('/(student)/edit-profile')}
-          />
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <Button
+              label="Edit Profile"
+              variant="outline"
+              size="sm"
+              leftIcon={<Edit3 size={15} color={theme.colors.primary} />}
+              onPress={() => router.push('/(student)/edit-profile')}
+            />
+            <Button
+              label="Change Password"
+              variant="outline"
+              size="sm"
+              leftIcon={<Lock size={15} color={theme.colors.primary} />}
+              onPress={() => router.push('/(shared)/settings/change-password' as any)}
+            />
+          </View>
         </Animated.View>
 
         {/* Info section */}
@@ -226,6 +235,17 @@ export default function StudentProfileScreen() {
             </TouchableOpacity>
           </View>
         </Animated.View>
+
+        <TouchableOpacity 
+          style={[styles.logoutBtn, { borderColor: theme.colors.error, marginBottom: 24 }]} 
+          activeOpacity={0.7}
+          onPress={handleLogout}
+        >
+          <LogOut size={20} color={theme.colors.error} />
+          <Text style={[styles.logoutText, { color: theme.colors.error, fontFamily: theme.typography.fontFamily.medium }]}>
+            Log Out
+          </Text>
+        </TouchableOpacity>
 
         <View style={{ height: 100 }} />
       </ScrollView>

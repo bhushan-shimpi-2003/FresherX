@@ -39,6 +39,7 @@ export default function AdminSettingsScreen() {
   
   const [isExportingUsers, setIsExportingUsers] = useState(false);
   const [isExportingJobs, setIsExportingJobs] = useState(false);
+  const [showAdminConfig, setShowAdminConfig] = useState(false);
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
@@ -244,6 +245,27 @@ export default function AdminSettingsScreen() {
             ADMIN CONFIGURATIONS
           </Text>
           <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+            <TouchableOpacity 
+              style={styles.settingRow} 
+              activeOpacity={0.7} 
+              onPress={() => setShowAdminConfig(!showAdminConfig)}
+            >
+              <View style={[styles.iconWrap, { backgroundColor: theme.colors.success + '20' }]}>
+                <Shield size={18} color={theme.colors.success} />
+              </View>
+              <Text style={[styles.settingLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium, flex: 1 }]}>
+                Admin Configurations
+              </Text>
+              <ChevronRight 
+                size={16} 
+                color={theme.colors.textMuted} 
+                style={{ transform: [{ rotate: showAdminConfig ? '90deg' : '0deg' }] }}
+              />
+            </TouchableOpacity>
+
+            {showAdminConfig && (
+              <>
+                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
             <View style={styles.settingRow}>
               <View style={[styles.iconWrap, { backgroundColor: theme.colors.success + '20' }]}>
                 <Shield size={18} color={theme.colors.success} />
@@ -321,6 +343,8 @@ export default function AdminSettingsScreen() {
               </Text>
               <ChevronRight size={16} color={theme.colors.textMuted} />
             </TouchableOpacity>
+              </>
+            )}
           </View>
         </Animated.View>
 
@@ -330,7 +354,7 @@ export default function AdminSettingsScreen() {
             ACCOUNT
           </Text>
           <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => { setPasswordError(''); bottomSheetRef.current?.present(); }}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => router.push('/(shared)/settings/change-password' as any)}>
               <View style={[styles.iconWrap, { backgroundColor: theme.colors.info + '20' }]}>
                 <Shield size={18} color={theme.colors.info} />
               </View>
@@ -348,7 +372,7 @@ export default function AdminSettingsScreen() {
             GENERAL
           </Text>
           <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => router.push('/(shared)/settings/privacy-policy' as any)}>
               <View style={[styles.iconWrap, { backgroundColor: theme.colors.textMuted + '20' }]}>
                 <FileText size={18} color={theme.colors.textMuted} />
               </View>
@@ -358,7 +382,7 @@ export default function AdminSettingsScreen() {
               <ChevronRight size={16} color={theme.colors.textMuted} />
             </TouchableOpacity>
             <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => router.push('/(shared)/settings/terms' as any)}>
               <View style={[styles.iconWrap, { backgroundColor: theme.colors.textMuted + '20' }]}>
                 <FileText size={18} color={theme.colors.textMuted} />
               </View>
@@ -382,23 +406,16 @@ export default function AdminSettingsScreen() {
           </View>
         </Animated.View>
 
-        {/* Account & Security */}
-        <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.group}>
-          <Text style={[styles.groupLabel, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }]}>
-            ACCOUNT & SECURITY
+        <TouchableOpacity 
+          style={[styles.logoutBtn, { borderColor: theme.colors.error, marginBottom: 24 }]} 
+          activeOpacity={0.7}
+          onPress={handleLogout}
+        >
+          <LogOut size={20} color={theme.colors.error} />
+          <Text style={[styles.logoutText, { color: theme.colors.error, fontFamily: theme.typography.fontFamily.medium }]}>
+            Log Out
           </Text>
-          <View style={[styles.settingsCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => router.push('/(shared)/settings')}>
-              <View style={[styles.iconWrap, { backgroundColor: theme.colors.info + '20' }]}>
-                <Shield size={18} color={theme.colors.info} />
-              </View>
-              <Text style={[styles.settingLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium, flex: 1 }]}>
-                Account Settings & Privacy
-              </Text>
-              <ChevronRight size={16} color={theme.colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+        </TouchableOpacity>
 
         <View style={{ height: 100 }} />
       </ScrollView>

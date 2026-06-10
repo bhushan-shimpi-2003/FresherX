@@ -15,6 +15,7 @@ export interface AdminDashboardStats {
 }
 
 export interface PendingRecruiter {
+  company: any;
   id: string;
   fullName: string;
   email: string;

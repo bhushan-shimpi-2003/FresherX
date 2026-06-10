@@ -4,7 +4,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Building2, Globe, MapPin, Briefcase, Users, ArrowUpRight, Moon, Sun, Bell, Shield, LogOut, ChevronRight } from 'lucide-react-native';
+import { Building2, Globe, MapPin, Briefcase, Users, ArrowUpRight, Moon, Sun, Bell, Shield, LogOut, ChevronRight, Edit3, Lock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
@@ -140,6 +140,23 @@ export default function RecruiterProfileScreen() {
               ))}
             </View>
           )}
+
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+            <Button
+              label="Edit Profile"
+              variant="outline"
+              size="sm"
+              leftIcon={<Edit3 size={15} color={theme.colors.primary} />}
+              onPress={() => router.push('/(shared)/settings/edit-profile')}
+            />
+            <Button
+              label="Change Password"
+              variant="outline"
+              size="sm"
+              leftIcon={<Lock size={15} color={theme.colors.primary} />}
+              onPress={() => router.push('/(shared)/settings/change-password' as any)}
+            />
+          </View>
         </Animated.View>
 
 
@@ -189,6 +206,17 @@ export default function RecruiterProfileScreen() {
             </TouchableOpacity>
           </View>
         </Animated.View>
+
+        <TouchableOpacity 
+          style={[styles.logoutBtn, { borderColor: theme.colors.error, marginBottom: 24 }]} 
+          activeOpacity={0.7}
+          onPress={handleLogout}
+        >
+          <LogOut size={20} color={theme.colors.error} />
+          <Text style={[styles.logoutText, { color: theme.colors.error, fontFamily: theme.typography.fontFamily.medium }]}>
+            Log Out
+          </Text>
+        </TouchableOpacity>
 
         <View style={{ height: 100 }} />
       </ScrollView>

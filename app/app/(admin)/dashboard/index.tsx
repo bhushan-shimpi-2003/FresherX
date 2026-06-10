@@ -105,36 +105,40 @@ export default function AdminDashboardScreen() {
               Action Required
             </Text>
           </View>
-          {quickActions.map(({ label, value, route, Icon, color, urgent }) => (
-            <TouchableOpacity
-              key={label}
-              onPress={() => router.push(route as any)}
-              style={[
-                styles.actionCard,
-                {
-                  backgroundColor: urgent ? color + '10' : theme.colors.card + '90',
-                  borderColor: urgent ? color + '30' : theme.colors.border,
-                },
-              ]}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: color + '20' }]}>
-                <Icon size={20} color={color} />
-              </View>
-              <View style={styles.actionInfo}>
-                <Text style={[styles.actionLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            {quickActions.map(({ label, value, route, Icon, color, urgent }) => (
+              <TouchableOpacity
+                key={label}
+                onPress={() => router.push(route as any)}
+                style={[
+                  styles.actionCard,
+                  {
+                    flex: 1,
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 12,
+                    backgroundColor: urgent ? color + '10' : theme.colors.card + '90',
+                    borderColor: urgent ? color + '30' : theme.colors.border,
+                  },
+                ]}
+                activeOpacity={0.8}
+              >
+                {urgent && (
+                  <View style={[styles.urgentDot, { backgroundColor: color, position: 'absolute', top: 12, right: 12 }]} />
+                )}
+                <View style={[styles.actionIcon, { backgroundColor: color + '20', marginBottom: 6 }]}>
+                  <Icon size={20} color={color} />
+                </View>
+                <Text style={[styles.actionLabel, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold, textAlign: 'center', fontSize: 13 }]} numberOfLines={2}>
                   {label}
                 </Text>
-                <Text style={[styles.actionValue, { color: urgent ? color : theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }]}>
+                <Text style={[styles.actionValue, { color: urgent ? color : theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, marginTop: 2, fontSize: 11, textAlign: 'center' }]}>
                   {value} {urgent ? 'pending' : 'total'}
                 </Text>
-              </View>
-              {urgent && (
-                <View style={[styles.urgentDot, { backgroundColor: color }]} />
-              )}
-              <ChevronRight size={16} color={theme.colors.textMuted} />
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))}
+          </View>
         </Animated.View>
 
         {/* Recent Activity Mock */}

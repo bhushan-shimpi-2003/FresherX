@@ -11,7 +11,7 @@ import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 export default function SettingsIndexScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
@@ -27,13 +27,6 @@ export default function SettingsIndexScreen() {
   };
 
   const sections = [
-    {
-      title: 'Account',
-      items: [
-        { icon: User, label: 'Edit Profile', route: '/(shared)/settings/edit-profile' as any },
-        { icon: Lock, label: 'Change Password', route: '/(shared)/settings/change-password' as any },
-      ],
-    },
     {
       title: 'Legal & Privacy',
       items: [
@@ -133,18 +126,7 @@ export default function SettingsIndexScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Danger Zone</Text>
             <View style={styles.card}>
-              <TouchableOpacity 
-                style={styles.settingRow} 
-                activeOpacity={0.7} 
-                onPress={handleLogout}
-              >
-                <View style={[styles.iconWrap, styles.dangerIconWrap]}>
-                  <LogOut size={18} color={theme.colors.error} />
-                </View>
-                <Text style={[styles.settingLabel, styles.dangerText]}>Log Out</Text>
-              </TouchableOpacity>
-              
-              <View style={styles.divider} />
+
               
               <TouchableOpacity 
                 style={styles.settingRow} 
