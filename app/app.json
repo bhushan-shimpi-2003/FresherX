@@ -10,14 +10,16 @@
     "scheme": "fresherx",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fresherx.app"
+      "bundleIdentifier": "com.fresherx.app",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#12121A"
       },
-      "package": "com.fresherx.app"
+      "package": "com.fresherx.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro"
@@ -38,6 +40,16 @@
         "expo-image-picker",
         {
           "photosPermission": "FresherX needs access to your photos to upload your avatar and resume."
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
         }
       ]
     ]

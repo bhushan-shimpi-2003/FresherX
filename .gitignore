@@ -42,3 +42,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase Service Accounts & Native Configs
+*-firebase-adminsdk-*.json
+fresherx-firebase-adminsdk-fbsvc-*.json
+google-services.json
+GoogleService-Info.plist

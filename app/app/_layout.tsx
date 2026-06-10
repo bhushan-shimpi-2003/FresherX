@@ -19,14 +19,22 @@ import { ThemeProvider } from '../theme';
 import { useAuthStore } from '../store/auth.store';
 import { useSettingsStore } from '../store/settings.store';
 import { useNotificationsStore } from '../store/notifications.store';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { BottomSheetModalProvider } from '../components/ui/BottomSheet';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import messaging from '@react-native-firebase/messaging';
 
 const queryClient = new QueryClient();
+
+// Register background handler
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  console.log('Message handled in the background!', remoteMessage);
+});
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  usePushNotifications();
   const { initialize, status, user } = useAuthStore();
   const { themeMode, loadSettings } = useSettingsStore();
   const { fetchNotifications, subscribeToNotifications, unsubscribeFromNotifications } = useNotificationsStore();

@@ -27,6 +27,7 @@ import savedRoutes from './routes/saved';
 import notificationRoutes from './routes/notifications';
 import authRoutes from './routes/auth';
 import shareRoutes from './routes/share';
+import fcmRoutes from './routes/fcm';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -35,6 +36,7 @@ app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/saved', savedRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/fcm', fcmRoutes);
 app.use('/s', shareRoutes);
 
 // Error handling middleware
