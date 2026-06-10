@@ -48,3 +48,6 @@ yarn-error.*
 fresherx-firebase-adminsdk-fbsvc-*.json
 google-services.json
 GoogleService-Info.plist
+
+.vercel
+.env*
