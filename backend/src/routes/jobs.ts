@@ -171,8 +171,8 @@ router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) =
     if (job?.recruiter_id) {
       await supabaseAdmin.from('notifications').insert([{
         user_id: job.recruiter_id,
-        title: 'New Job Application',
-        body: `A new candidate applied to your job: ${job.title}`,
+        title: '🎉 New Application Received!',
+        body: `Great news! A candidate just applied for your role: ${job.title}. Tap to review their profile 🚀`,
         type: 'application',
         data: { job_id: id }
       }]);
@@ -181,9 +181,9 @@ router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) =
       await NotificationService.sendToUser(
         job.recruiter_id,
         {
-          title: 'New Job Application',
-          body: `A new candidate applied to your job: ${job.title}`,
-          data: { job_id: id }
+          title: '🎉 New Application Received!',
+          body: `Great news! A candidate just applied for your role: ${job.title}. Tap to review their profile 🚀`,
+          data: { job_id: id as string }
         }
       );
     }
