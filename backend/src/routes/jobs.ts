@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
 import { sensitiveRouteLimiter } from '../middleware/rateLimiter';
+import { NotificationService } from '../services/notification.service';
 
 const router = Router();
 
@@ -175,6 +176,16 @@ router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) =
         type: 'application',
         data: { job_id: id }
       }]);
+
+      // Send actual FCM push notification
+      await NotificationService.sendToUser(
+        job.recruiter_id,
+        {
+          title: 'New Job Application',
+          body: `A new candidate applied to your job: ${job.title}`,
+          data: { job_id: id }
+        }
+      );
     }
     
     res.json({ success: true, applications: newCount });
