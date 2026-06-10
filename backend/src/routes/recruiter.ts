@@ -89,8 +89,8 @@ router.post('/jobs', async (req, res) => {
       if (allStudents && allStudents.length > 0) {
         const notifications = allStudents.map(student => ({
           user_id: student.id,
-          title: 'New Job Posted!',
-          body: `${payload.companyName || 'A company'} just posted a new job: ${payload.title}. Check it out!`,
+          title: '🚀 New Job Posted!',
+          body: `Exciting news! ${payload.companyName || 'A company'} just posted a new role: ${payload.title}. Apply now! ✨`,
           type: 'new_job',
           data: { job_id: data.id }
         }));
@@ -100,8 +100,8 @@ router.post('/jobs', async (req, res) => {
         await NotificationService.sendToUsers(
           allStudents.map(student => student.id),
           {
-            title: 'New Job Posted!',
-            body: `${payload.companyName || 'A company'} just posted a new job: ${payload.title}. Check it out!`,
+            title: '🚀 New Job Posted!',
+            body: `Exciting news! ${payload.companyName || 'A company'} just posted a new role: ${payload.title}. Apply now! ✨`,
             data: { job_id: data.id }
           }
         );

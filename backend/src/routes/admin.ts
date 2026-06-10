@@ -241,8 +241,8 @@ router.post('/jobs/:id/review', async (req, res) => {
                 const chunk = allStudents.slice(i, i + chunkSize);
                 const notifications = chunk.map(student => ({
                   user_id: student.id,
-                  title: 'New Job Posted!',
-                  body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
+                  title: '🚀 New Job Posted!',
+                  body: `Exciting news! ${job.company_name || 'A company'} just posted a new role: ${job.title}. Apply now! ✨`,
                   type: 'new_job',
                   data: { job_id: id }
                 }));
@@ -253,8 +253,8 @@ router.post('/jobs/:id/review', async (req, res) => {
               await NotificationService.sendToUsers(
                 allStudents.map(student => student.id),
                 {
-                  title: 'New Job Posted!',
-                  body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
+                  title: '🚀 New Job Posted!',
+                  body: `Exciting news! ${job.company_name || 'A company'} just posted a new role: ${job.title}. Apply now! ✨`,
                   data: { job_id: id }
                 }
               );
