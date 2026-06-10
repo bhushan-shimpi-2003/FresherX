@@ -1,10 +1,12 @@
 import messaging from '@react-native-firebase/messaging';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 /**
  * Requests permission for push notifications (iOS requires explicit permission).
  */
 export async function requestUserPermission() {
+  if (Platform.OS === 'web') return false;
+  
   const authStatus = await messaging().requestPermission();
   const enabled =
     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -21,6 +23,8 @@ export async function requestUserPermission() {
  * This token should be sent to the backend (Supabase) and saved to the user's profile.
  */
 export async function getFCMToken() {
+  if (Platform.OS === 'web') return null;
+
   try {
     const token = await messaging().getToken();
     console.log('FCM Token:', token);
@@ -35,6 +39,8 @@ export async function getFCMToken() {
  * Sets up listeners for foreground and background push notifications.
  */
 export function setupPushNotifications() {
+  if (Platform.OS === 'web') return () => {};
+
   // Handle messages when app is in foreground
   const unsubscribe = messaging().onMessage(async remoteMessage => {
     console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));

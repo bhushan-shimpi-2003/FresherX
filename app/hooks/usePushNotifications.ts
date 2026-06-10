@@ -12,12 +12,16 @@ export function usePushNotifications() {
   const isRegistered = useRef(false);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
+    
     if (status === 'authenticated' && user && !isRegistered.current) {
       registerForPushNotifications();
     }
   }, [status, user]);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
+
     // Listen for token refreshes
     const unsubscribeTokenRefresh = messaging().onTokenRefresh(async (token) => {
       if (user) {
@@ -66,6 +70,8 @@ export function usePushNotifications() {
   }, [user]);
 
   const registerForPushNotifications = async () => {
+    if (Platform.OS === 'web') return;
+
     try {
       // 1. Request Permission
       const authStatus = await messaging().requestPermission();
@@ -108,6 +114,8 @@ export function usePushNotifications() {
   };
 
   const displayLocalNotification = async (remoteMessage: any) => {
+    if (Platform.OS === 'web') return;
+
     // Create a channel (required for Android)
     const channelId = await notifee.createChannel({
       id: 'default',

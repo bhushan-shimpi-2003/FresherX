@@ -10,7 +10,7 @@
     "scheme": "fresherx",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fresherx.app",
+      "bundleIdentifier": "com.FreshrX",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
@@ -18,7 +18,7 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#12121A"
       },
-      "package": "com.fresherx.app",
+      "package": "com.FreshrX",
       "googleServicesFile": "./google-services.json"
     },
     "web": {

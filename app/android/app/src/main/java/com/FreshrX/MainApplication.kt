@@ -1,4 +1,4 @@
-package com.fresherx.app
+package com.FreshrX
 
 import android.app.Application
 import android.content.res.Configuration

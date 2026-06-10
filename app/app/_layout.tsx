@@ -27,9 +27,11 @@ import messaging from '@react-native-firebase/messaging';
 const queryClient = new QueryClient();
 
 // Register background handler
-messaging().setBackgroundMessageHandler(async remoteMessage => {
-  console.log('Message handled in the background!', remoteMessage);
-});
+if (Platform.OS !== 'web') {
+  messaging().setBackgroundMessageHandler(async remoteMessage => {
+    console.log('Message handled in the background!', remoteMessage);
+  });
+}
 
 SplashScreen.preventAutoHideAsync();
 
