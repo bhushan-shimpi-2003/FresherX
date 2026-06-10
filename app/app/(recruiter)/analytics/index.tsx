@@ -6,19 +6,44 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BarChart2, Eye, Users, TrendingUp } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
+import { FlashList } from '@shopify/flash-list';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
 import { useRecruiterStore } from '../../../store/recruiter.store';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRecruiterJobs, useRecruiterStats } from '../../../hooks/useRecruiterData';
 import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { formatCount } from '../../../utils/formatters';
+import { supabase } from '../../../lib/supabase/client';
 
 export default function RecruiterAnalyticsScreen() {
   const theme = useTheme();
   const { user } = useAuthStore();
-  const { stats, jobs, fetchStats, fetchJobs } = useRecruiterStore();
+  const queryClient = useQueryClient();
+  const { data: jobsData } = useRecruiterJobs(user?.id);
+  const { data: stats } = useRecruiterStats(user?.id);
+  const jobs = jobsData?.activeJobs || [];
 
   useEffect(() => {
-    if (user) { fetchStats(user.id); fetchJobs(user.id); }
+    if (user) { 
+      const channel = supabase
+        .channel('analytics_jobs')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'jobs', filter: `recruiter_id=eq.${user.id}` },
+          (payload) => {
+            if (payload.new && payload.new.id) {
+               queryClient.invalidateQueries({ queryKey: ['recruiterJobs', user.id] });
+               queryClient.invalidateQueries({ queryKey: ['recruiterStats', user.id] });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user]);
 
   const topJobs = [...jobs]
@@ -28,7 +53,14 @@ export default function RecruiterAnalyticsScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
       <ScreenHeader title="Analytics" subtitle="Track your performance" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <FlashList
+        data={topJobs || []}
+        estimatedItemSize={80}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        ListHeaderComponent={
+          <>
 
         {/* Summary cards */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.grid}>
@@ -116,12 +148,16 @@ export default function RecruiterAnalyticsScreen() {
           </Animated.View>
         )}
 
-        {/* Top performing jobs */}
-        <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.section}>
+        {/* Top performing jobs Header */}
+        <Animated.View entering={FadeInDown.delay(150).springify()} style={[styles.section, { paddingBottom: 12 }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
             Top Performing Jobs
           </Text>
-          {topJobs.map((job, i) => (
+        </Animated.View>
+          </>
+        }
+        renderItem={({ item: job, index: i }) => (
+          <View style={{ paddingBottom: 10 }}>
             <View key={job.id} style={[styles.jobRow, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
               <Text style={[styles.rank, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.bold }]}>
                 #{i + 1}
@@ -135,14 +171,16 @@ export default function RecruiterAnalyticsScreen() {
                 </Text>
               </View>
             </View>
-          ))}
-          {topJobs.length === 0 && (
+          </View>
+        )}
+        ListFooterComponent={
+          topJobs.length === 0 ? (
             <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
               Post jobs to see performance analytics
             </Text>
-          )}
-        </Animated.View>
-      </ScrollView>
+          ) : null
+        }
+      />
     </SafeAreaView>
   );
 }

@@ -28,7 +28,10 @@ export default function JobDetailScreen() {
   const { selectedJob, isLoading, fetchJobById, saveJob, unsaveJob, applyJob } = useJobsStore();
 
   useEffect(() => {
-    if (id) fetchJobById(id);
+    if (id) {
+      fetchJobById(id);
+      jobsApi.incrementView(id).catch(console.warn);
+    }
   }, [id]);
 
   if (isLoading || !selectedJob) {

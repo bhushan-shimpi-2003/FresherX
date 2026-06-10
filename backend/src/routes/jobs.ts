@@ -130,9 +130,17 @@ router.get('/:id', requireAuth, async (req, res) => {
 // Increment views
 router.post('/:id/views', requireAuth, async (req, res) => {
   try {
+    if (!req.user) throw new Error('Unauthorized');
     const { id } = req.params;
-    const { error } = await supabaseAdmin.rpc('increment_job_views', { job_id: id });
-    if (error) throw error;
+    
+    const { error } = await supabaseAdmin.from('job_views').insert({
+      job_id: id,
+      user_id: req.user.id
+    });
+    
+    // Ignore duplicate view errors (23505 = unique_violation)
+    if (error && error.code !== '23505') throw error;
+    
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

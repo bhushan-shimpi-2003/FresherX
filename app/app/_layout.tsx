@@ -20,6 +20,9 @@ import { useAuthStore } from '../store/auth.store';
 import { useSettingsStore } from '../store/settings.store';
 import { useNotificationsStore } from '../store/notifications.store';
 import { BottomSheetModalProvider } from '../components/ui/BottomSheet';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -116,21 +119,23 @@ export default function RootLayout() {
   const themeOverride = themeMode === 'system' ? null : themeMode;
 
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider override={themeOverride}>
-          <BottomSheetModalProvider>
-            <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
-            <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(student)" />
-              <Stack.Screen name="(recruiter)" />
-              <Stack.Screen name="(admin)" />
-            </Stack>
-          </BottomSheetModalProvider>
-        </ThemeProvider>
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <ThemeProvider override={themeOverride}>
+            <BottomSheetModalProvider>
+              <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
+              <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(student)" />
+                <Stack.Screen name="(recruiter)" />
+                <Stack.Screen name="(admin)" />
+              </Stack>
+            </BottomSheetModalProvider>
+          </ThemeProvider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

@@ -6,15 +6,19 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BarChart } from 'react-native-gifted-charts';
+import { FlashList } from '@shopify/flash-list';
 import { Briefcase, Eye, Users, TrendingUp, Plus, ArrowUpRight, Clock, CheckCircle, AlertCircle, Bell } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
 import { useRecruiterStore } from '../../../store/recruiter.store';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRecruiterProfile, useRecruiterJobs, useRecruiterStats } from '../../../hooks/useRecruiterData';
 import { Loader } from '../../../components/ui/Loader';
 import { Badge } from '../../../components/ui/Badge';
 import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { formatCount, formatRelativeTime } from '../../../utils/formatters';
 import { palette } from '../../../constants/colors';
+import { supabase } from '../../../lib/supabase/client';
 
 const statusConfig: Record<string, { label: string; variant: any; dotColor?: string }> = {
   published: { label: 'Live', variant: 'success', dotColor: '#4CAF50' },
@@ -28,13 +32,45 @@ export default function RecruiterDashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { profile, company, jobs, stats, analytics, isLoading, fetchProfile, fetchJobs, fetchStats } = useRecruiterStore();
+  // React Query Migration
+  const queryClient = useQueryClient();
+  const { data: profileRes, isLoading: profileLoading } = useRecruiterProfile(user?.id);
+  const { data: jobsData, isLoading: jobsLoading } = useRecruiterJobs(user?.id);
+  const { data: stats } = useRecruiterStats(user?.id);
+
+  const profile = profileRes?.profile || profileRes; // Depends on how profile is returned
+  const company = profileRes?.company;
+  const jobs = jobsData?.activeJobs || [];
+  const analytics = jobsData?.analytics || [];
+  const isLoading = profileLoading || jobsLoading;
 
   useEffect(() => {
     if (user) {
-      fetchProfile(user.id);
-      fetchJobs(user.id);
-      fetchStats(user.id);
+      const channel = supabase
+        .channel('dashboard_jobs')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'jobs', filter: `recruiter_id=eq.${user.id}` },
+          (payload) => {
+            // Optimistic Cache Mutation for Jobs
+            if (payload.new && payload.new.id) {
+               queryClient.setQueryData(['recruiterJobs', user.id], (oldData) => {
+                 if (!oldData) return oldData;
+                 // Safely trigger a background refetch instead of complex manual mapping
+                 // because we also need to recalculate analytics arrays and stats.
+                 return oldData; 
+               });
+               // Invalidate to trigger background update
+               queryClient.invalidateQueries({ queryKey: ['recruiterJobs', user.id] });
+               queryClient.invalidateQueries({ queryKey: ['recruiterStats', user.id] });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -73,7 +109,14 @@ export default function RecruiterDashboardScreen() {
         />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <FlashList
+        data={analytics || []}
+        estimatedItemSize={120}
+        keyExtractor={(item) => item.jobId}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        ListHeaderComponent={
+          <>
         {/* Header section */}
         <ScreenHeader
           title={company?.name ?? profile?.fullName ?? 'Recruiter'}
@@ -226,16 +269,20 @@ export default function RecruiterDashboardScreen() {
           </Animated.View>
         )}
 
-        {/* Performance Analytics */}
+        {/* Performance Analytics Header */}
         {analytics && analytics.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(200).springify()} style={{ marginTop: 24 }}>
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={{ marginTop: 24, paddingBottom: 16 }}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]}>
                 Performance Analytics
               </Text>
             </View>
-            <View style={{ paddingHorizontal: 16, gap: 16 }}>
-              {analytics.map((item) => (
+          </Animated.View>
+        )}
+          </>
+        }
+        renderItem={({ item }) => (
+          <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
                 <View key={item.jobId} style={[styles.jobRow, { backgroundColor: theme.colors.card + '90', borderColor: theme.colors.border, flexDirection: 'column', alignItems: 'stretch' }]}>
                   <Text style={[styles.jobTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]} numberOfLines={1}>
                     {item.title}
@@ -267,11 +314,9 @@ export default function RecruiterDashboardScreen() {
                     </View>
                   </View>
                 </View>
-              ))}
-            </View>
-          </Animated.View>
+          </View>
         )}
-      </ScrollView>
+      />
     </SafeAreaView>
   );
 }
