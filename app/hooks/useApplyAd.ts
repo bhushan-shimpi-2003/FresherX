@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import mobileAds, { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+
+// Initialize the Google Mobile Ads SDK
+mobileAds().initialize().catch(console.warn);
 
 const adUnitId = __DEV__ ? TestIds.REWARDED : 'ca-app-pub-2920036380008137/1229515288';
 
