@@ -1,4 +1,4 @@
-import messaging from '@react-native-firebase/messaging';
+import { getMessaging, requestPermission, getToken, onMessage, setBackgroundMessageHandler, onNotificationOpenedApp, getInitialNotification, AuthorizationStatus } from '@react-native-firebase/messaging';
 import { Alert, Platform } from 'react-native';
 
 /**
@@ -7,10 +7,11 @@ import { Alert, Platform } from 'react-native';
 export async function requestUserPermission() {
   if (Platform.OS === 'web') return false;
   
-  const authStatus = await messaging().requestPermission();
+  const messaging = getMessaging();
+  const authStatus = await requestPermission(messaging);
   const enabled =
-    authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-    authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    authStatus === AuthorizationStatus.AUTHORIZED ||
+    authStatus === AuthorizationStatus.PROVISIONAL;
 
   if (enabled) {
     console.log('Authorization status:', authStatus);
@@ -26,7 +27,8 @@ export async function getFCMToken() {
   if (Platform.OS === 'web') return null;
 
   try {
-    const token = await messaging().getToken();
+    const messaging = getMessaging();
+    const token = await getToken(messaging);
     console.log('FCM Token:', token);
     return token;
   } catch (error) {
@@ -41,8 +43,10 @@ export async function getFCMToken() {
 export function setupPushNotifications() {
   if (Platform.OS === 'web') return () => {};
 
+  const messaging = getMessaging();
+
   // Handle messages when app is in foreground
-  const unsubscribe = messaging().onMessage(async remoteMessage => {
+  const unsubscribe = onMessage(messaging, async remoteMessage => {
     console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
     // In a real app, you might want to show a custom toast or update a notification store
     Alert.alert(
@@ -52,20 +56,19 @@ export function setupPushNotifications() {
   });
 
   // Handle background/quit state messages
-  messaging().setBackgroundMessageHandler(async remoteMessage => {
+  setBackgroundMessageHandler(messaging, async remoteMessage => {
     console.log('Message handled in the background!', remoteMessage);
     // Background tasks like updating local database or badge count
   });
 
   // Handle notification opened from background
-  messaging().onNotificationOpenedApp(remoteMessage => {
+  onNotificationOpenedApp(messaging, remoteMessage => {
     console.log('Notification caused app to open from background state:', remoteMessage.notification);
     // Navigate to specific screen based on remoteMessage.data
   });
 
   // Handle notification opened from quit state
-  messaging()
-    .getInitialNotification()
+  getInitialNotification(messaging)
     .then(remoteMessage => {
       if (remoteMessage) {
         console.log('Notification caused app to open from quit state:', remoteMessage.notification);

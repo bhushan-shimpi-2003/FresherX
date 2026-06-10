@@ -57,7 +57,16 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
         .limit(50);
 
       if (error) throw error;
-      const notifications = (data ?? []) as Notification[];
+      const notifications: Notification[] = (data ?? []).map((n: any) => ({
+        id: n.id,
+        userId: n.user_id,
+        type: n.type,
+        title: n.title,
+        body: n.body,
+        data: n.data,
+        isRead: n.is_read,
+        createdAt: n.created_at,
+      }));
       const unreadCount = notifications.filter((n) => !n.isRead).length;
       set({ notifications, unreadCount, isLoading: false });
     } catch (err: any) {

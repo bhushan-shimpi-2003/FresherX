@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
+import { NotificationService } from '../services/notification.service';
 
 const router = Router();
 
@@ -239,6 +240,16 @@ router.post('/jobs/:id/review', async (req, res) => {
           }));
           // Insert notifications in batches if needed, but for now we do it in one go
           await supabaseAdmin.from('notifications').insert(notifications);
+
+          // Send actual FCM push notifications
+          await NotificationService.sendToUsers(
+            allStudents.map(student => student.id),
+            {
+              title: 'New Job Posted!',
+              body: `${job.company_name || 'A company'} just posted a new job: ${job.title}. Check it out!`,
+              data: { job_id: id }
+            }
+          );
         }
       }
 
@@ -251,6 +262,16 @@ router.post('/jobs/:id/review', async (req, res) => {
           type: 'system',
           data: { job_id: id }
         }]);
+
+        // Send actual FCM push notification
+        await NotificationService.sendToUsers(
+          [job.recruiter_id],
+          {
+            title: 'Job Approved',
+            body: `Your job posting '${job.title}' has been approved and is now live.`,
+            data: { job_id: id }
+          }
+        );
       }
     } else {
       // If rejected/spam, notify recruiter
@@ -268,6 +289,16 @@ router.post('/jobs/:id/review', async (req, res) => {
           type: 'system',
           data: { job_id: id }
         }]);
+
+        // Send actual FCM push notification
+        await NotificationService.sendToUsers(
+          [job.recruiter_id],
+          {
+            title: 'Job Review Update',
+            body: `Your job posting '${job.title}' has been ${statusMap[action]}.${reason ? ` Reason: ${reason}` : ''}`,
+            data: { job_id: id }
+          }
+        );
       }
     }
     res.json({ success: true });

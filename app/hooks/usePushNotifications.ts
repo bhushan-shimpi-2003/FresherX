@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
+import { getMessaging, onTokenRefresh, onMessage, onNotificationOpenedApp, getInitialNotification, requestPermission, registerDeviceForRemoteMessages, getToken, AuthorizationStatus } from '@react-native-firebase/messaging';
 import notifee, { EventType } from '@notifee/react-native';
 import { useAuthStore } from '../store/auth.store';
 import { useRouter } from 'expo-router';
@@ -22,28 +22,29 @@ export function usePushNotifications() {
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
+    const messaging = getMessaging();
+
     // Listen for token refreshes
-    const unsubscribeTokenRefresh = messaging().onTokenRefresh(async (token) => {
+    const unsubscribeTokenRefresh = onTokenRefresh(messaging, async (token) => {
       if (user) {
         await saveTokenToBackend(token);
       }
     });
 
     // Handle incoming messages in the foreground
-    const unsubscribeOnMessage = messaging().onMessage(async (remoteMessage) => {
+    const unsubscribeOnMessage = onMessage(messaging, async (remoteMessage) => {
       console.log('A new FCM message arrived in the foreground!', JSON.stringify(remoteMessage));
       await displayLocalNotification(remoteMessage);
     });
 
     // Handle user clicking on a notification when the app is in the background
-    const unsubscribeOnNotificationOpenedApp = messaging().onNotificationOpenedApp((remoteMessage) => {
+    const unsubscribeOnNotificationOpenedApp = onNotificationOpenedApp(messaging, (remoteMessage) => {
       console.log('Notification caused app to open from background state:', remoteMessage);
       handleNotificationInteraction(remoteMessage);
     });
 
     // Handle user clicking on a notification when the app was completely terminated
-    messaging()
-      .getInitialNotification()
+    getInitialNotification(messaging)
       .then((remoteMessage) => {
         if (remoteMessage) {
           console.log('Notification caused app to open from quit state:', remoteMessage);
@@ -73,11 +74,13 @@ export function usePushNotifications() {
     if (Platform.OS === 'web') return;
 
     try {
+      const messaging = getMessaging();
+
       // 1. Request Permission
-      const authStatus = await messaging().requestPermission();
+      const authStatus = await requestPermission(messaging);
       const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        authStatus === AuthorizationStatus.AUTHORIZED ||
+        authStatus === AuthorizationStatus.PROVISIONAL;
 
       if (!enabled) {
         console.log('User declined push notification permissions');
@@ -86,11 +89,11 @@ export function usePushNotifications() {
 
       // 2. Register device for remote messages (Required for iOS)
       if (Platform.OS === 'ios') {
-        await messaging().registerDeviceForRemoteMessages();
+        await registerDeviceForRemoteMessages(messaging);
       }
 
       // 3. Get the FCM Token
-      const token = await messaging().getToken();
+      const token = await getToken(messaging);
       console.log('FCM Token:', token);
 
       // 4. Save to backend

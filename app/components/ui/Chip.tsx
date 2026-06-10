@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useTheme } from '../../theme';
 
@@ -38,7 +38,7 @@ export function Chip({ label, selected = false, onPress, style, icon }: ChipProp
       onPressOut={() => { scale.value = withSpring(1); }}
       activeOpacity={1}
     >
-      {icon}
+      {icon && <View style={styles.iconContainer}>{icon}</View>}
       <Text
         style={[
           styles.label,
@@ -58,10 +58,14 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 20,
-    paddingVertical: 12, // Increased height
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderWidth: 1.5,
   },
-  label: { fontSize: 13 },
+  iconContainer: {
+    marginRight: 6,
+  },
+  label: { 
+    fontSize: 14,
+  },
 });

@@ -34,7 +34,7 @@ router.post('/token', async (req, res) => {
 
     if (error) {
       console.error('Error saving FCM token:', error);
-      return res.status(500).json({ error: 'Failed to save token' });
+      return res.status(500).json({ error: 'Failed to save token', details: error });
     }
 
     return res.json({ success: true, message: 'Token registered successfully' });

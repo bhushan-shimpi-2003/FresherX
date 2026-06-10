@@ -22,13 +22,13 @@ import { useNotificationsStore } from '../store/notifications.store';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { BottomSheetModalProvider } from '../components/ui/BottomSheet';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import messaging from '@react-native-firebase/messaging';
+import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 
 const queryClient = new QueryClient();
 
 // Register background handler
 if (Platform.OS !== 'web') {
-  messaging().setBackgroundMessageHandler(async remoteMessage => {
+  setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
     console.log('Message handled in the background!', remoteMessage);
   });
 }

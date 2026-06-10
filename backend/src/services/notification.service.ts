@@ -90,6 +90,95 @@ export const NotificationService = {
   },
 
   /**
+   * Sends a push notification to multiple users.
+   */
+  async sendToUsers(userIds: string[], payload: SendPushPayload) {
+    if (!isFirebaseInitialized) {
+      console.warn('Firebase Admin not initialized. Skipping push notification.');
+      return;
+    }
+
+    try {
+      if (!userIds || userIds.length === 0) return;
+
+      // Get device tokens for all these users
+      const { data: tokens, error } = await supabaseAdmin
+        .from('user_fcm_tokens')
+        .select('token')
+        .in('user_id', userIds);
+
+      if (error) {
+        console.error('Error fetching FCM tokens for users:', error);
+        return;
+      }
+
+      if (!tokens || tokens.length === 0) {
+        console.log(`No registered devices found for the requested users.`);
+        return;
+      }
+
+      const deviceTokens = Array.from(new Set(tokens.map((t) => t.token)));
+      
+      // Firebase allows a max of 500 tokens per multicast
+      const chunkSize = 500;
+      let totalSuccess = 0;
+      let failedTokens: string[] = [];
+
+      for (let i = 0; i < deviceTokens.length; i += chunkSize) {
+        const chunk = deviceTokens.slice(i, i + chunkSize);
+        const message = {
+          notification: {
+            title: payload.title,
+            body: payload.body,
+          },
+          data: payload.data || {},
+          tokens: chunk,
+          android: {
+            priority: 'high' as const,
+          },
+          apns: {
+            payload: {
+              aps: {
+                contentAvailable: true,
+              },
+            },
+          },
+        };
+
+        const response = await getMessaging().sendEachForMulticast(message);
+        totalSuccess += response.successCount;
+
+        if (response.failureCount > 0) {
+          response.responses.forEach((resp: any, idx: number) => {
+            if (!resp.success) {
+              const errorCode = resp.error?.code;
+              if (
+                errorCode === 'messaging/invalid-registration-token' ||
+                errorCode === 'messaging/registration-token-not-registered'
+              ) {
+                failedTokens.push(chunk[idx]);
+              }
+            }
+          });
+        }
+      }
+
+      // Clean up invalid tokens
+      if (failedTokens.length > 0) {
+        await supabaseAdmin
+          .from('user_fcm_tokens')
+          .delete()
+          .in('token', failedTokens);
+        console.log(`Cleaned up ${failedTokens.length} invalid tokens.`);
+      }
+
+      console.log(`Push notification sent to ${totalSuccess} devices for ${userIds.length} users.`);
+    } catch (error) {
+      console.error('Failed to send multicast push notification:', error);
+    }
+  },
+
+  /**
    * Sends a push notification to a specific topic.
    */
   async sendToTopic(topic: string, payload: SendPushPayload) {

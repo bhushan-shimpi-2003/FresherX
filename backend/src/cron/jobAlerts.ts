@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { supabaseAdmin } from '../config/supabase';
+import { NotificationService } from '../services/notification.service';
 
 export const startJobAlertsCron = () => {
   console.log('Starting Job Expiration Alerts Cron Job...');
@@ -46,6 +47,16 @@ export const startJobAlertsCron = () => {
             }));
             
             await supabaseAdmin.from('notifications').insert(notifications);
+
+            // Send actual FCM push notifications
+            await NotificationService.sendToUsers(
+              matchingStudents.map(student => student.user_id),
+              {
+                title: 'Urgent: Job Expiring Soon!',
+                body: `Only 2 hours remaining! Apply fast for ${job.title} at ${job.company_name || 'a company'}.`,
+                data: { job_id: job.id }
+              }
+            );
           }
         }
         

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../config/supabase';
 import { requireAuth } from '../middleware/auth';
+import { NotificationService } from '../services/notification.service';
 
 const router = Router();
 router.use(requireAuth);
@@ -93,6 +94,16 @@ router.post('/jobs', async (req, res) => {
           data: { job_id: data.id }
         }));
         await supabaseAdmin.from('notifications').insert(notifications);
+
+        // Send actual FCM push notifications
+        await NotificationService.sendToUsers(
+          allStudents.map(student => student.id),
+          {
+            title: 'New Job Posted!',
+            body: `${payload.companyName || 'A company'} just posted a new job: ${payload.title}. Check it out!`,
+            data: { job_id: data.id }
+          }
+        );
       }
     } else {
       // Pending: Send notification to all admins for verification
@@ -110,6 +121,16 @@ router.post('/jobs', async (req, res) => {
           data: { job_id: data.id }
         }));
         await supabaseAdmin.from('notifications').insert(notifications);
+
+        // Send actual FCM push notifications
+        await NotificationService.sendToUsers(
+          admins.map(admin => admin.id),
+          {
+            title: 'New Job Requires Verification',
+            body: `${payload.companyName || 'A recruiter'} posted a new job: ${payload.title}. Please review it.`,
+            data: { job_id: data.id }
+          }
+        );
       }
     }
 
