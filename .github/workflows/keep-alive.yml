@@ -1,0 +1,54 @@
+name: Keep Vercel Backend Alive
+
+# 1. Runs every 5 minutes using a cron schedule.
+# Note: GitHub Actions cron scheduling can be delayed during periods of high load on GitHub's infrastructure.
+# It will run approximately every 5 minutes.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  # Allows you to trigger this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# 8. Follows GitHub Actions best practices by setting specific permissions
+permissions:
+  contents: read
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    
+    # 7. Supports environment variables for the backend URL
+    env:
+      HEALTH_URL: "https://fresherx-backend.vercel.app/api/health"
+      CRON_URL: "https://fresherx-backend.vercel.app/api/cron/job-alerts"
+
+    steps:
+      - name: Ping Health Endpoint
+        # 3. Fails gracefully if the endpoint is temporarily unavailable (|| true)
+        # 4. Logs the HTTP status code and response (-w "\nHTTP Status: %{http_code}\n")
+        # 5. Uses curl with a timeout (--max-time 10) and retry mechanism (--retry 3 --retry-delay 5)
+        # 6. Prevents the workflow from failing due to transient network issues (|| true ensures the step succeeds even if curl fails)
+        run: |
+          echo "Pinging Health API to prevent cold starts..."
+          curl --request GET \
+               --url "$HEALTH_URL" \
+               --max-time 10 \
+               --retry 3 \
+               --retry-delay 5 \
+               --retry-all-errors \
+               --silent \
+               --show-error \
+               --write-out "\n\nHTTP Status: %{http_code}\n" || true
+
+      - name: Ping Job Alerts Endpoint
+        run: |
+          echo "Triggering Job Expiration Alerts..."
+          curl --request GET \
+               --url "$CRON_URL" \
+               --max-time 30 \
+               --retry 2 \
+               --retry-delay 5 \
+               --retry-all-errors \
+               --silent \
+               --show-error \
+               --write-out "\n\nHTTP Status: %{http_code}\n" || true
