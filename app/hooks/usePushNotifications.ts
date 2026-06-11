@@ -146,7 +146,6 @@ export function usePushNotifications() {
       data: remoteMessage.data,
       android: {
         channelId,
-        smallIcon: 'ic_launcher', // make sure you have this icon or change it
         pressAction: {
           id: 'default',
         },

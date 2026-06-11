@@ -16,10 +16,14 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#12121A"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.FreshrX",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "notification": {
+        "icon": "./assets/images/icon.png",
+        "color": "#4F46E5"
+      }
     },
     "web": {
       "bundler": "metro"
@@ -33,7 +37,7 @@
           "image": "./assets/images/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#12121A"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       [
