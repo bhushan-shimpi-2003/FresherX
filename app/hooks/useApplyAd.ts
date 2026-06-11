@@ -27,11 +27,20 @@ export function useApplyAd() {
       },
     );
 
+    const unsubscribeError = rewarded.addAdEventListener(
+      AdEventType.ERROR,
+      error => {
+        console.error('Ad failed to load: ', error);
+        setAdLoaded(false);
+      }
+    );
+
     rewarded.load();
 
     return () => {
       unsubscribeLoaded();
       unsubscribeEarned();
+      unsubscribeError();
     };
   }, []);
 
