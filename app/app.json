@@ -13,17 +13,17 @@
       "bundleIdentifier": "com.FreshrX",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#4F46E5"
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.FreshrX",
-      "googleServicesFile": "./google-services.json",
-      "notification": {
-        "icon": "./assets/images/icon.png",
-        "color": "#4F46E5"
-      }
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro"
