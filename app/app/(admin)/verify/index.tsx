@@ -36,7 +36,7 @@ export default function VerifyRecruitersScreen() {
         verifyRecruiter({ recruiterId, action, note: note || undefined })
           .then(result => { if (!result.success) window.alert(result.error); });
       }
-    } else {
+    } else if (Platform.OS === 'ios') {
       Alert.prompt(
         isApprove ? `Approve ${name}?` : `Reject ${name}?`,
         isApprove ? 'Add a note (optional)' : 'Provide a reason for rejection',
@@ -52,6 +52,22 @@ export default function VerifyRecruitersScreen() {
           },
         ],
         'plain-text',
+      );
+    } else {
+      Alert.alert(
+        isApprove ? `Approve ${name}?` : `Reject ${name}?`,
+        isApprove ? 'Are you sure you want to verify this recruiter?' : 'Are you sure you want to reject this recruiter?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: isApprove ? 'Approve' : 'Reject',
+            style: isApprove ? 'default' : 'destructive',
+            onPress: async () => {
+              const result = await verifyRecruiter({ recruiterId, action });
+              if (!result.success) Alert.alert('Error', result.error);
+            },
+          },
+        ]
       );
     }
   };

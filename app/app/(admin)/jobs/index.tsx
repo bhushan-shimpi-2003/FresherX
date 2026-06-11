@@ -33,7 +33,7 @@ export default function ReviewJobsScreen() {
         reviewJob({ jobId, action, reason: note || undefined })
           .then(result => { if (!result.success) window.alert(result.error); });
       }
-    } else {
+    } else if (Platform.OS === 'ios') {
       Alert.prompt(
         isApprove ? `Approve "${title}"?` : `Reject "${title}"?`,
         isApprove ? 'Add a note (optional)' : 'Provide a reason for rejection',
@@ -49,6 +49,22 @@ export default function ReviewJobsScreen() {
           },
         ],
         'plain-text',
+      );
+    } else {
+      Alert.alert(
+        isApprove ? `Approve "${title}"?` : `Reject "${title}"?`,
+        isApprove ? 'Are you sure you want to approve this job?' : 'Are you sure you want to reject this job?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: isApprove ? 'Approve' : 'Reject',
+            style: isApprove ? 'default' : 'destructive',
+            onPress: async () => {
+              const result = await reviewJob({ jobId, action });
+              if (!result.success) Alert.alert('Error', result.error);
+            },
+          },
+        ]
       );
     }
   };
