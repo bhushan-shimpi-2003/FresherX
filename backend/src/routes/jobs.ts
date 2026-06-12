@@ -161,10 +161,12 @@ router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) =
     
     // Track in applied_jobs
     if (req.user) {
-      await supabaseAdmin.from('applied_jobs').insert({
+      const { error: applyError } = await supabaseAdmin.from('applied_jobs').insert({
         user_id: req.user.id,
         job_id: id
       });
+      // Ignore duplicate application error (23505 = unique_violation)
+      if (applyError && applyError.code !== '23505') throw applyError;
     }
 
     // Notify recruiter

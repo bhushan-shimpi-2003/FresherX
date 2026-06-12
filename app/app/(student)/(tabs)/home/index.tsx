@@ -39,8 +39,7 @@ export default function StudentHomeScreen() {
 
   useEffect(() => {
     // Default home page to show jobs posted today that match user skills
-    fetchJobs({ datePosted: '24h', matchUserSkills: true }, true);
-    fetchRecommendedJobs();
+    fetchJobs({ datePosted: '24h', sortBy: 'recent' }, true);
     if (user) {
       // fetchProfile(user.id) // would be here
     }
@@ -49,10 +48,8 @@ export default function StudentHomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
-      fetchJobs({ datePosted: '24h', matchUserSkills: true }, true),
-      fetchRecommendedJobs()
-    ]);
-    setRefreshing(false);
+      fetchJobs({ datePosted: '24h', sortBy: 'recent' }, true)
+    ]).then(() => setRefreshing(false));
   }, []);
 
   const handleSearch = useCallback((text: string) => {
@@ -180,39 +177,6 @@ export default function StudentHomeScreen() {
           <FileText size={24} color="#FFF" />
         </View>
       </TouchableOpacity>
-
-      {/* Recommended Jobs */}
-      {recommendedJobs.length > 0 && (
-        <View style={{ marginBottom: 28 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 }}>
-            <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>
-              Recommended for you
-            </Text>
-            <TouchableOpacity onPress={() => router.push('/(student)/(tabs)/search')}>
-              <Text style={{ color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium, fontSize: 13 }}>
-                See all {'>'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            horizontal
-            data={recommendedJobs}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-            renderItem={({ item, index }) => (
-              <JobCard
-                job={item}
-                index={index}
-                variant="compact"
-                onPress={() => router.push(`/(student)/job/${item.id}`)}
-                onSave={() => handleSaveToggle(item.id, item.isSaved ?? false)}
-              />
-            )}
-          />
-        </View>
-      )}
 
       {/* Feed Header */}
       <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>

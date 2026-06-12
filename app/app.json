@@ -13,10 +13,6 @@
       "bundleIdentifier": "com.FreshrX",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
-    "notification": {
-      "icon": "./assets/images/icon.png",
-      "color": "#4F46E5"
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
@@ -31,6 +27,13 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#4F46E5"
+        }
+      ],
       [
         "expo-splash-screen",
         {
