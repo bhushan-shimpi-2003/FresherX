@@ -19,7 +19,16 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.FreshrX",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro"
@@ -51,6 +60,7 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
+      "@react-native-firebase/crashlytics",
       [
         "expo-build-properties",
         {
