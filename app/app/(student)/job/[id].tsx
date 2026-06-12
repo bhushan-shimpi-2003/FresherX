@@ -26,7 +26,7 @@ export default function JobDetailScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { selectedJob, isLoading, fetchJobById, saveJob, unsaveJob, applyJob } = useJobsStore();
+  const { selectedJob, isLoading, fetchJobById, saveJob, unsaveJob, applyJob, appliedJobs } = useJobsStore();
   
   const { showAdIfAvailable } = useApplyAd();
 
@@ -170,7 +170,6 @@ export default function JobDetailScreen() {
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Fixed Apply Button */}
       <Animated.View
         entering={FadeInUp.delay(400).springify()}
         style={[styles.applyBar, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.border }]}
@@ -178,14 +177,24 @@ export default function JobDetailScreen() {
         <Text style={[styles.postedText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
           Posted {formatRelativeTime(job.createdAt)}
         </Text>
-        <Button
-          label="Apply Now"
-          variant="primary"
-          size="lg"
-          rightIcon={<ExternalLink size={16} color="#FFF" />}
-          onPress={handleApply}
-          style={{ flex: 1 }}
-        />
+        {appliedJobs.some((j) => j.id === job.id) ? (
+          <Button
+            label="Applied"
+            variant="secondary"
+            size="lg"
+            disabled={true}
+            style={{ flex: 1 }}
+          />
+        ) : (
+          <Button
+            label="Apply Now"
+            variant="primary"
+            size="lg"
+            rightIcon={<ExternalLink size={16} color="#FFF" />}
+            onPress={handleApply}
+            style={{ flex: 1 }}
+          />
+        )}
       </Animated.View>
     </SafeAreaView>
   );

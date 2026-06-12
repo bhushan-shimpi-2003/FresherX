@@ -268,8 +268,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterBtn: {
-    width: 48,
-    height: 48,
+    width: 50,
+    height: 50,
     borderRadius: 12,
     backgroundColor: 'rgba(99, 102, 241, 0.15)', // Same as theme.colors.primary + '15'
     alignItems: 'center',

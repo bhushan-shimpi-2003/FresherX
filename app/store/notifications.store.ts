@@ -25,6 +25,7 @@ interface NotificationsStore {
   fetchNotifications: (userId: string) => Promise<void>;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
+  deleteNotification: (notificationId: string) => Promise<void>;
   setPushToken: (token: string) => void;
   addNotification: (notification: Notification) => void;
   subscribeToNotifications: (userId: string) => void;
@@ -77,6 +78,21 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
         notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
         unreadCount: 0,
       }));
+    } catch {}
+  },
+
+  deleteNotification: async (notificationId) => {
+    try {
+      await notificationsApi.deleteNotification(notificationId);
+      set((state) => {
+        const deletedNotif = state.notifications.find((n) => n.id === notificationId);
+        return {
+          notifications: state.notifications.filter((n) => n.id !== notificationId),
+          unreadCount: deletedNotif && !deletedNotif.isRead 
+            ? Math.max(0, state.unreadCount - 1) 
+            : state.unreadCount,
+        };
+      });
     } catch {}
   },
 

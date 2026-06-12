@@ -30,7 +30,7 @@ export default function StudentHomeScreen() {
   const { profile } = useUserStore();
   const { 
     jobs, isLoading, isLoadingMore, hasMore, fetchJobs, fetchMoreJobs, saveJob, unsaveJob,
-    recommendedJobs, isRecommendedLoading, fetchRecommendedJobs
+    recommendedJobs, isRecommendedLoading, fetchRecommendedJobs, savedJobs, fetchSavedJobs
   } = useJobsStore();
   const { unreadCount } = useNotificationsStore();
   const [searchText, setSearchText] = useState('');
@@ -97,11 +97,18 @@ export default function StudentHomeScreen() {
     }, true);
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning 👋';
+    if (hour < 17) return 'Good afternoon 👋';
+    return 'Good evening 👋';
+  };
+
   const renderHeader = () => (
     <>
       <ScreenHeader
         title={profile?.fullName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Fresher'}
-        subtitle="Good morning 👋"
+        subtitle={getGreeting()}
         rightAction={
           <View style={styles.topActions}>
             <TouchableOpacity
@@ -136,7 +143,7 @@ export default function StudentHomeScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <BookmarkIcon size={20} color={theme.colors.accent} />
             <Text style={{ fontSize: 22, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.accent }}>
-              {saveJob?.length ?? 0}
+              {savedJobs?.length ?? 0}
             </Text>
           </View>
           <Text style={{ fontSize: 13, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
@@ -207,8 +214,8 @@ export default function StudentHomeScreen() {
           style={{
             marginRight: 16,
             marginLeft: 8,
-            width: 44,
-            height: 44,
+            width: 50,
+            height: 50,
             borderRadius: 12,
             backgroundColor: theme.colors.primary + '15',
             alignItems: 'center',

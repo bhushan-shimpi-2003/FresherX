@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/Button';
 import { ChevronLeft, CheckCircle2, XCircle } from 'lucide-react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { supabase } from '../../../lib/supabase/client';
+import api from '../../../services/axios';
 import { useAuthStore } from '../../../store/auth.store';
 
 // Mock questions for demonstration
@@ -52,10 +53,9 @@ export default function QuizScreen() {
     setIsFinished(true);
 
     if (user && finalScore >= 80) {
-      // Record verification
+      // Record verification via backend
       try {
-        await supabase.from('skill_verifications').insert({
-          user_id: user.id,
+        await api.post('/profile/verify-skill', {
           skill: (skill as string).toUpperCase(),
           score: finalScore,
           passed: true,

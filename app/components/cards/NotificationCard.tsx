@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { Bell, CheckCircle, Briefcase, Clock, AlertCircle } from 'lucide-react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, GestureResponderEvent } from 'react-native';
+import { Bell, CheckCircle, Briefcase, Clock, AlertCircle, Trash2 } from 'lucide-react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { useTheme } from '../../theme';
 import { Notification } from '../../store/notifications.store';
@@ -9,6 +9,7 @@ import { formatRelativeTime } from '../../utils/formatters';
 interface NotificationCardProps {
   notification: Notification;
   onPress: () => void;
+  onDelete?: () => void;
   index?: number;
 }
 
@@ -32,6 +33,10 @@ export function NotificationCard({ notification, onPress, index = 0 }: Notificat
   const theme = useTheme();
   const Icon = iconMap[notification.type] ?? Bell;
   const iconColor = colorMap[notification.type] ?? theme.colors.primary;
+
+  function onDelete(event: GestureResponderEvent): void {
+    throw new Error('Function not implemented.');
+  }
 
   return (
     <Animated.View entering={FadeInRight.delay(index * 50).springify()}>
@@ -74,6 +79,11 @@ export function NotificationCard({ notification, onPress, index = 0 }: Notificat
             {formatRelativeTime(notification.createdAt)}
           </Text>
         </View>
+        {onDelete && (
+          <TouchableOpacity onPress={onDelete} style={{ padding: 4, marginLeft: 8 }}>
+            <Trash2 size={16} color={theme.colors.textMuted} />
+          </TouchableOpacity>
+        )}
         {!notification.isRead && (
           <View style={[styles.unreadDot, { backgroundColor: theme.colors.primary }]} />
         )}

@@ -107,8 +107,8 @@ export default function StudentSavedScreen() {
           style={{
             marginRight: 16,
             marginLeft: 8,
-            width: 44,
-            height: 44,
+            width: 50,
+            height: 50,
             borderRadius: 12,
             backgroundColor: theme.colors.primary + '15',
             alignItems: 'center',

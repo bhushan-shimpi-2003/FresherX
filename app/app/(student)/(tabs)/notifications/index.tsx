@@ -14,7 +14,7 @@ import { Bell, CheckCheck } from 'lucide-react-native';
 export default function NotificationsScreen() {
   const theme = useTheme();
   const { user } = useAuthStore();
-  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead, error } = useNotificationsStore();
+  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead, deleteNotification, error } = useNotificationsStore();
   const [filter, setFilter] = React.useState<string>('all');
 
 
@@ -89,6 +89,7 @@ export default function NotificationsScreen() {
                 notification={item}
                 index={index}
                 onPress={() => !item.isRead && markAsRead(item.id)}
+                onDelete={() => deleteNotification(item.id)}
               />
             )}
             ListEmptyComponent={

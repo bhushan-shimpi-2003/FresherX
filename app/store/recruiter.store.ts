@@ -132,7 +132,8 @@ export const useRecruiterStore = create<RecruiterStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { profile } = get();
-      const data = await recruiterApi.createJob({ ...payload, companyId: profile?.companyId, status: JOB_STATUS.PENDING } as CreateJobPayload);
+      // Do not send status, let backend decide based on auto_verified
+      const data = await recruiterApi.createJob({ ...payload, companyId: profile?.companyId } as CreateJobPayload);
       set((state) => ({ jobs: [data as Job, ...state.jobs], isLoading: false }));
       return { success: true, id: (data as Job).id };
     } catch (err: any) {

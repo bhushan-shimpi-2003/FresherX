@@ -43,6 +43,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // Import and use routes
+import { auditMiddleware } from './middleware/audit';
+app.use(auditMiddleware);
+
 import jobRoutes from './routes/jobs';
 import adminRoutes from './routes/admin';
 import recruiterRoutes from './routes/recruiter';

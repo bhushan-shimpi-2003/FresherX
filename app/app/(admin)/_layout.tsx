@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 import { LayoutDashboard, Shield, Briefcase, Users, Settings as SettingsIcon } from 'lucide-react-native';
 import { useTheme } from '../../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdminTabsLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -14,7 +16,8 @@ export default function AdminTabsLayout() {
           borderTopColor: theme.colors.tabBarBorder,
           borderTopWidth: 1,
           paddingTop: 8,
-          height: 64,
+          paddingBottom: Math.max(insets.bottom, 8),
+          height: 64 + Math.max(insets.bottom, 8),
         },
         tabBarActiveTintColor: theme.colors.tabBarActive,
         tabBarInactiveTintColor: theme.colors.tabBarInactive,

@@ -92,4 +92,31 @@ router.delete('/account', async (req, res) => {
   }
 });
 
+router.post('/verify-skill', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { skill, score, passed } = req.body;
+
+    if (!skill || score === undefined || passed === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('skill_verifications')
+      .insert({
+        user_id: userId,
+        skill: skill,
+        score: score,
+        passed: passed
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

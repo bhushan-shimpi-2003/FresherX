@@ -51,7 +51,14 @@ router.post('/jobs', async (req, res) => {
       .single();
 
     const isAutoVerified = profile?.auto_verified === true;
-    const initialStatus = payload.status || (isAutoVerified ? 'published' : 'pending');
+    
+    // Security fix: Only allow 'draft' status from frontend. Otherwise, enforce auto-verified logic.
+    let initialStatus = 'pending';
+    if (payload.status === 'draft') {
+      initialStatus = 'draft';
+    } else if (isAutoVerified) {
+      initialStatus = 'published';
+    }
 
     console.log('[DEBUG JOB POST]', payload);
 

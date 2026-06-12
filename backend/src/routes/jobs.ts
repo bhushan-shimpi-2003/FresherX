@@ -148,6 +148,12 @@ router.post('/:id/views', requireAuth, async (req, res) => {
       }
       throw error;
     }
+
+    // Increment the views column in jobs table
+    const { data: jobData } = await supabaseAdmin.from('jobs').select('views').eq('id', id).single();
+    if (jobData) {
+      await supabaseAdmin.from('jobs').update({ views: (jobData.views || 0) + 1 }).eq('id', id);
+    }
     
     res.json({ success: true });
   } catch (error: any) {

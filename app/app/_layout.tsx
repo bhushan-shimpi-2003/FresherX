@@ -17,8 +17,10 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider } from '../theme';
 import { useAuthStore } from '../store/auth.store';
+import { useUserStore } from '../store/user.store';
 import { useSettingsStore } from '../store/settings.store';
 import { useNotificationsStore } from '../store/notifications.store';
+import { useJobsStore } from '../store/jobs.store';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { BottomSheetModalProvider } from '../components/ui/BottomSheet';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -114,11 +116,15 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, status, user, segments, pathname]);
 
-  // Global notification subscription
+  // Global notification subscription and data preloading
   useEffect(() => {
     if (user && status === 'authenticated') {
       fetchNotifications(user.id);
       subscribeToNotifications(user.id);
+      if (user.role === 'student') {
+        useUserStore.getState().fetchProfile(user.id);
+        useJobsStore.getState().fetchSavedJobs(user.id);
+      }
       
       return () => {
         unsubscribeFromNotifications();
