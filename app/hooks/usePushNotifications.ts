@@ -78,6 +78,7 @@ export function usePushNotifications() {
 
       // Check current permission first
       let authStatus = await hasPermission(messaging);
+      console.log('Current push permission status before requesting:', authStatus);
 
       // If not determined, and we are not explicitly asking, skip
       if (authStatus === AuthorizationStatus.NOT_DETERMINED && !askPermission) {
@@ -89,7 +90,16 @@ export function usePushNotifications() {
         (authStatus === AuthorizationStatus.NOT_DETERMINED || authStatus === AuthorizationStatus.DENIED) && 
         askPermission
       ) {
+        console.log('Requesting permission from user...');
+        
+        if (Platform.OS === 'android' && Platform.Version >= 33) {
+          const { PermissionsAndroid } = require('react-native');
+          const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+          console.log('PermissionsAndroid status:', granted);
+        }
+
         authStatus = await requestPermission(messaging);
+        console.log('Status after requesting:', authStatus);
       }
 
       const enabled =
@@ -97,7 +107,7 @@ export function usePushNotifications() {
         authStatus === AuthorizationStatus.PROVISIONAL;
 
       if (!enabled) {
-        console.log('User declined push notification permissions');
+        console.log('User declined push notification permissions or they are permanently denied.');
         return;
       }
 

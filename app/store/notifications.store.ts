@@ -93,7 +93,9 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
             : state.unreadCount,
         };
       });
-    } catch {}
+    } catch (err) {
+      console.error('Failed to delete notification:', err);
+    }
   },
 
   subscribeToNotifications: (userId) => {
