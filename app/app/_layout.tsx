@@ -23,6 +23,7 @@ import { usePushNotifications } from '../hooks/usePushNotifications';
 import { BottomSheetModalProvider } from '../components/ui/BottomSheet';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const queryClient = new QueryClient();
 
@@ -132,20 +133,22 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <ThemeProvider override={themeOverride}>
-            <BottomSheetModalProvider>
-              <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
-              <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(student)" />
-                <Stack.Screen name="(recruiter)" />
-                <Stack.Screen name="(admin)" />
-              </Stack>
-            </BottomSheetModalProvider>
-          </ThemeProvider>
-        </GestureHandlerRootView>
+        <ErrorBoundary>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <ThemeProvider override={themeOverride}>
+              <BottomSheetModalProvider>
+                <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
+                <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(student)" />
+                  <Stack.Screen name="(recruiter)" />
+                  <Stack.Screen name="(admin)" />
+                </Stack>
+              </BottomSheetModalProvider>
+            </ThemeProvider>
+          </GestureHandlerRootView>
+        </ErrorBoundary>
       </SafeAreaProvider>
     </QueryClientProvider>
   );

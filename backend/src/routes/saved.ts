@@ -30,8 +30,13 @@ router.post('/:jobId', async (req, res) => {
       .from('saved_jobs')
       .insert({ student_id: userId, job_id: jobId });
 
-    // Ignore unique constraint errors
-    if (error && error.code !== '23505') throw error;
+    // Handle unique constraint errors gracefully
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ success: true, message: 'Job already saved' });
+      }
+      throw error;
+    }
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

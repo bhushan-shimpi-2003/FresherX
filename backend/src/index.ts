@@ -1,3 +1,15 @@
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN || '',
+  integrations: [
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
+});
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -53,10 +65,13 @@ app.use('/api/fcm', fcmRoutes);
 app.use('/api/cron', cronRoutes);
 app.use('/s', shareRoutes);
 
+// Sentry Error Handler must be before any other error middleware
+Sentry.setupExpressErrorHandler(app);
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
 
 import { startJobAlertsCron } from './cron/jobAlerts';

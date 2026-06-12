@@ -44,18 +44,23 @@ export default function JobDetailScreen() {
   const job = selectedJob;
   const matchColor = job.matchScore ? getMatchColor(job.matchScore) : theme.colors.primary;
 
-  const handleApply = async () => {
+  const handleApply = () => {
     if (job.applyLink) {
-      try {
-        await applyJob(job.id);
-        Alert.alert('Success', 'Application submitted successfully! This job is now in your Applied tab.');
-      } catch (err) {
-        console.warn('Failed to apply', err);
-      }
-      
-      const openApplyLink = () => Linking.openURL(job.applyLink!);
+      const onSuccess = async () => {
+        try {
+          await applyJob(job.id);
+          Alert.alert('Success', 'Application submitted successfully! This job is now in your Applied tab.');
+        } catch (err) {
+          console.warn('Failed to apply', err);
+        }
+        Linking.openURL(job.applyLink!);
+      };
 
-      showAdIfAvailable(openApplyLink);
+      const onSkipped = () => {
+        Alert.alert('Action Required', 'Please watch the short ad to continue applying for this job.');
+      };
+
+      showAdIfAvailable(onSuccess, onSkipped);
     }
   };
 

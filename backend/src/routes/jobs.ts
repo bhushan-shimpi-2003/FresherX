@@ -22,7 +22,9 @@ router.get('/', requireAuth, async (req, res) => {
       .eq('status', 'published');
 
     if (keyword) {
-      query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%,company_name.ilike.%${keyword}%,location.ilike.%${keyword}%`);
+      // Use Full-Text Search index
+      const ftsQuery = (keyword as string).split(' ').filter(Boolean).join(' | ');
+      query = query.textSearch('fts', ftsQuery);
     }
     if (jobType) {
       const types = (jobType as string).split(',');
@@ -139,8 +141,13 @@ router.post('/:id/views', requireAuth, async (req, res) => {
       user_id: req.user.id
     });
     
-    // Ignore duplicate view errors (23505 = unique_violation)
-    if (error && error.code !== '23505') throw error;
+    // Handle duplicate view errors (23505 = unique_violation) gracefully
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ success: true, message: 'Already viewed' });
+      }
+      throw error;
+    }
     
     res.json({ success: true });
   } catch (error: any) {
@@ -152,12 +159,15 @@ router.post('/:id/views', requireAuth, async (req, res) => {
 router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) => {
   try {
     const { id } = req.params;
-    // Since we don't have an RPC yet, fetch and increment
-    const { data: job } = await supabaseAdmin.from('jobs').select('title, applications, recruiter_id').eq('id', id).single();
-    const newCount = (job?.applications || 0) + 1;
     
-    const { error } = await supabaseAdmin.from('jobs').update({ applications: newCount }).eq('id', id);
-    if (error) throw error;
+    // 1. Atomically increment the application count using our custom RPC
+    const { error: incrementError } = await supabaseAdmin.rpc('increment_job_applications', { p_job_id: id });
+    if (incrementError) throw incrementError;
+
+    // 2. Fetch the updated job data for notification context
+    const { data: job, error: fetchError } = await supabaseAdmin.from('jobs').select('title, applications, recruiter_id').eq('id', id).single();
+    if (fetchError) throw fetchError;
+    const newCount = job?.applications || 0;
     
     // Track in applied_jobs
     if (req.user) {
@@ -165,8 +175,13 @@ router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) =
         user_id: req.user.id,
         job_id: id
       });
-      // Ignore duplicate application error (23505 = unique_violation)
-      if (applyError && applyError.code !== '23505') throw applyError;
+      // Handle duplicate application error (23505 = unique_violation)
+      if (applyError) {
+        if (applyError.code === '23505') {
+          return res.status(409).json({ error: 'You have already applied to this job.' });
+        }
+        throw applyError;
+      }
     }
 
     // Notify recruiter
@@ -213,11 +228,15 @@ router.get('/me/applied', requireAuth, async (req, res) => {
     }
     
     const jobIds = applied.map(a => a.job_id);
+    const PAGE_SIZE = 20;
+    const pageNum = parseInt(req.query.page as string || '0', 10);
+
     const { data, error } = await supabaseAdmin
       .from('jobs')
       .select(`*, recruiter:profiles(id, full_name, poster_type)`)
       .in('id', jobIds)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
       
     if (error) throw error;
     res.json({ data });
