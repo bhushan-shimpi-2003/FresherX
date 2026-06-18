@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { Alert } from 'react-native';
 import mobileAds, { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 
 let isInitialized = false;
@@ -106,20 +107,19 @@ export function useApplyAd() {
       unsubscribeRefs.current.push(unsubscribeClosed);
 
       try {
+        console.log('Showing native ad...');
         rewardedRef.current.show();
-      } catch (e) {
+      } catch (e: any) {
+        Alert.alert('Error', 'Failed to show ad natively: ' + e?.message);
         console.warn('Failed to show ad natively', e);
         unsubscribeClosed();
-        // Graceful fallback if native show() fails
         onSuccess();
         loadNewAd();
       }
     } else {
+      Alert.alert('Ad Not Ready', 'Ad is not loaded yet. Skipping ad.');
       console.log('Ad not loaded yet or failed, falling back to success');
-      // If ad isn't ready or failed to load entirely, we don't block the user
-      // But we can notify the developer in dev mode, or just silently succeed
       onSuccess();
-      // Try to load one for next time
       loadNewAd();
     }
   };

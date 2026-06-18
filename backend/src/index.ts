@@ -42,6 +42,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// App-ads.txt for AdMob
+app.get('/app-ads.txt', (req, res) => {
+  res.type('text/plain');
+  res.send('google.com, pub-2920036380008137, DIRECT, f08c47fec0942fa0');
+});
+
 // Import and use routes
 import { auditMiddleware } from './middleware/audit';
 app.use(auditMiddleware);
