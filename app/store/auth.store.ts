@@ -4,6 +4,9 @@ import { storage, STORAGE_KEYS } from '../utils/storage';
 import { AuthUser, AuthStatus } from '../types/auth.types';
 import { UserRole } from '../constants/config';
 import { supabase } from '../lib/supabase/client';
+// Imported lazily to avoid circular dependency
+import { useUserStore } from './user.store';
+import { useResumeStore } from './resume.store';
 
 interface AuthStore {
   user: AuthUser | null;
@@ -154,13 +157,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     console.log('[AuthStore] Starting logout process');
     try {
       await supabase.auth.signOut();
-      // Optional: Ping a backend /auth/logout if you need to invalidate tokens server-side
     } catch (err) {
       console.error('[AuthStore] Logout error:', err);
     } finally {
       console.log('[AuthStore] Clearing storage and state');
       await storage.clear();
-      
+      // Clear per-user stores so next user starts fresh
+      useUserStore.getState().reset();
+      useResumeStore.getState().reset();
       // Slight delay to ensure UI transitions smoothly
       setTimeout(() => {
         set({ user: null, status: 'unauthenticated' });

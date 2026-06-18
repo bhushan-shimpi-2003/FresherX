@@ -34,6 +34,19 @@ export function NotificationCard({ notification, onPress, onDelete, index = 0 }:
   const Icon = iconMap[notification.type] ?? Bell;
   const iconColor = colorMap[notification.type] ?? theme.colors.primary;
 
+  // For job notifications, format body as "Role: message in Location"
+  const formattedBody = React.useMemo(() => {
+    if ((notification.type === 'new_job' || notification.type === 'saved_job') && notification.data) {
+      const role = notification.data.job_title || notification.data.role;
+      const location = notification.data.location;
+      if (role && location) {
+        return `${role}: new opportunities in ${location}.`;
+      }
+      if (role) return `${role}: ${notification.body}`;
+    }
+    return notification.body;
+  }, [notification]);
+
   return (
     <Animated.View entering={FadeInRight.delay(index * 50).springify()}>
       <TouchableOpacity
@@ -69,11 +82,16 @@ export function NotificationCard({ notification, onPress, onDelete, index = 0 }:
             style={[styles.body, { color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily.regular }]}
             numberOfLines={2}
           >
-            {notification.body}
+            {formattedBody}
           </Text>
-          <Text style={[styles.time, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
-            {formatRelativeTime(notification.createdAt)}
-          </Text>
+          <View style={styles.footer}>
+            <Text style={[styles.time, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.regular }]}>
+              {formatRelativeTime(notification.createdAt)}
+            </Text>
+            {(notification.type === 'new_job' || notification.type === 'saved_job') && notification.data?.job_id && (
+              <Text style={[styles.viewJob, { color: iconColor }]}>View Job →</Text>
+            )}
+          </View>
         </View>
         {onDelete && (
           <TouchableOpacity onPress={onDelete} style={{ padding: 4, marginLeft: 8 }}>
@@ -106,7 +124,9 @@ const styles = StyleSheet.create({
   content: { flex: 1, gap: 3 },
   title: { fontSize: 14 },
   body: { fontSize: 13, lineHeight: 19 },
-  time: { fontSize: 11, marginTop: 2 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
+  time: { fontSize: 11 },
+  viewJob: { fontSize: 11, fontWeight: '600' },
   unreadDot: {
     width: 8,
     height: 8,

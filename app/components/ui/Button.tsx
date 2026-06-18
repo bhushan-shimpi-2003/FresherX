@@ -61,9 +61,9 @@ export function Button({
     };
 
     const sizeStyles: Record<Size, ViewStyle> = {
-      sm: { paddingHorizontal: 14, paddingVertical: 8, gap: 6 },
-      md: { paddingHorizontal: 20, paddingVertical: 12, gap: 8 },
-      lg: { paddingHorizontal: 28, paddingVertical: 14, gap: 10 },
+      sm: { paddingHorizontal: 12, height: 36, gap: 6 },
+      md: { paddingHorizontal: 16, height: 44, gap: 8 },
+      lg: { paddingHorizontal: 24, height: 50, gap: 10 },
     };
 
     const variantStyles: Record<Variant, ViewStyle> = {

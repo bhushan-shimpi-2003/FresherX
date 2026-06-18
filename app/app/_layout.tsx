@@ -91,6 +91,22 @@ export default function RootLayout() {
         if (status === 'unauthenticated' && !inAuthGroup) {
           router.replace('/(auth)/welcome');
         } else if (status === 'authenticated' && user) {
+          const inStudentGroup = segments[0] === '(student)';
+          const inRecruiterGroup = segments[0] === '(recruiter)';
+          const inAdminGroup = segments[0] === '(admin)';
+
+          // Role-based route guards
+          if (user.role === 'student' && (inRecruiterGroup || inAdminGroup)) {
+            router.replace('/(student)/home');
+            return;
+          } else if (user.role === 'recruiter' && (inStudentGroup || inAdminGroup)) {
+            router.replace('/(recruiter)/dashboard');
+            return;
+          } else if (user.role === 'admin' && (inStudentGroup || inRecruiterGroup)) {
+            router.replace('/(admin)/dashboard');
+            return;
+          }
+
           // Only redirect from index or auth group to prevent interrupting deep links
           if (pathname === '/' || inAuthGroup) {
             if (user.role === 'student') {

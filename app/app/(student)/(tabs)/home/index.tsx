@@ -3,7 +3,7 @@ import React, { useEffect, useCallback, useState } from 'react';
 import {
   View, Text, FlatList, RefreshControl, StyleSheet, Modal } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Bell, Sliders, X, UserCheck, Bookmark as BookmarkIcon, BellRing, FileText } from 'lucide-react-native';
+import { Bell, Sliders, X, UserCheck, Bookmark as BookmarkIcon, FileText } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../../theme';
 import { useAuthStore } from '../../../../store/auth.store';
@@ -129,71 +129,69 @@ export default function StudentHomeScreen() {
       <SearchBar
         value={searchText}
         onChangeText={handleSearch}
-        style={{ marginHorizontal: 16, marginBottom: 20 }}
+        style={{ marginHorizontal: 16, marginBottom: 14 }}
       />
 
       {/* KPI Cards */}
-      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 28, gap: 12 }}>
-
-        
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16, gap: 12 }}>
         <TouchableOpacity 
-          style={{ flex: 1, backgroundColor: theme.colors.accent + '15', padding: 16, borderRadius: 20 }}
-          onPress={() => router.push('/(student)/(tabs)/saved')}
+          style={{ flex: 1, backgroundColor: theme.colors.primary + '15', padding: 14, borderRadius: 16 }}
+          onPress={() => router.push('/(student)/(tabs)/jobs')}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <BookmarkIcon size={20} color={theme.colors.accent} />
-            <Text style={{ fontSize: 22, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.accent }}>
-              {savedJobs?.length ?? 0}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Briefcase size={18} color={theme.colors.primary} />
+            <Text style={{ fontSize: 20, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.primary }}>
+              {jobs?.length ?? 0}
             </Text>
           </View>
-          <Text style={{ fontSize: 13, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
-            Saved Jobs
+          <Text style={{ fontSize: 12, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
+            Available Jobs
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={{ flex: 1, backgroundColor: theme.colors.warning + '15', padding: 16, borderRadius: 20 }}
-          onPress={() => router.push('/(student)/notifications')}
+          style={{ flex: 1, backgroundColor: theme.colors.accent + '15', padding: 14, borderRadius: 16 }}
+          onPress={() => router.push('/(student)/(tabs)/saved')}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <BellRing size={20} color={theme.colors.warning} />
-            <Text style={{ fontSize: 22, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.warning }}>
-              {unreadCount ?? 0}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <BookmarkIcon size={18} color={theme.colors.accent} />
+            <Text style={{ fontSize: 20, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.accent }}>
+              {savedJobs?.length ?? 0}
             </Text>
           </View>
-          <Text style={{ fontSize: 13, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
-            Alerts
+          <Text style={{ fontSize: 12, fontFamily: theme.typography.fontFamily.medium, color: theme.colors.textSecondary }}>
+            Saved Jobs
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Resume Builder Banner */}
       <TouchableOpacity 
-        style={{ marginHorizontal: 16, marginBottom: 28, backgroundColor: theme.colors.primary, borderRadius: 20, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+        style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: theme.colors.primary, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
         onPress={() => router.push('/(student)/(tabs)/resume')}
       >
-        <View style={{ flex: 1, paddingRight: 16 }}>
-          <Text style={{ color: '#FFF', fontSize: 18, fontFamily: theme.typography.fontFamily.bold, marginBottom: 4 }}>
+        <View style={{ flex: 1, paddingRight: 12 }}>
+          <Text style={{ color: '#FFF', fontSize: 16, fontFamily: theme.typography.fontFamily.bold, marginBottom: 2 }}>
             Build your ATS Resume
           </Text>
-          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontFamily: theme.typography.fontFamily.regular }}>
-            Create a professional, parser-friendly PDF resume in seconds.
+          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: theme.typography.fontFamily.regular }}>
+            Generate a professional PDF resume in seconds.
           </Text>
         </View>
-        <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: 12, borderRadius: 16 }}>
-          <FileText size={24} color="#FFF" />
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: 10, borderRadius: 12 }}>
+          <FileText size={20} color="#FFF" />
         </View>
       </TouchableOpacity>
 
       {/* Feed Header */}
-      <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-        <Text style={{ fontSize: 20, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>
+      <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+        <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>
           Discover Jobs
         </Text>
       </View>
 
       {/* Filter chips & Advanced Filters */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
         <FlatList
           horizontal
           data={JOB_TYPE_FILTERS}
@@ -214,16 +212,16 @@ export default function StudentHomeScreen() {
           style={{
             marginRight: 16,
             marginLeft: 8,
-            width: 50,
-            height: 50,
-            borderRadius: 12,
+            width: 40,
+            height: 40,
+            borderRadius: 10,
             backgroundColor: theme.colors.primary + '15',
             alignItems: 'center',
             justifyContent: 'center',
           }}
           onPress={() => setShowFilters(true)}
         >
-          <Sliders size={20} color={theme.colors.primary} />
+          <Sliders size={18} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 

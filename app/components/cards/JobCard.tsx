@@ -148,7 +148,7 @@ export function JobCard({ job, onPress, onSave, index = 0, variant = 'default' }
         >
           {job.title}
         </Text>
-        <Text style={{ fontSize: 14, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, marginBottom: 12 }}>
+        <Text style={{ fontSize: 13, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium, marginBottom: 8 }}>
           {job.companyName}
         </Text>
 
@@ -219,15 +219,15 @@ export function JobCard({ job, onPress, onSave, index = 0, variant = 'default' }
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   headerInfo: { flex: 1 },
   postedAt: { fontSize: 11 },
@@ -241,12 +241,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   matchText: { fontSize: 12 },
-  title: { fontSize: 16, lineHeight: 22, marginBottom: 10 },
-  meta: { flexDirection: 'row', gap: 12, marginBottom: 12, flexWrap: 'wrap' },
+  title: { fontSize: 15, lineHeight: 20, marginBottom: 6 },
+  meta: { flexDirection: 'row', gap: 10, marginBottom: 8, flexWrap: 'wrap' },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText: { fontSize: 12 },
-  skills: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 14 },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  skills: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 10 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   salary: { fontSize: 15 },
   compactCard: {
     width: 260,
