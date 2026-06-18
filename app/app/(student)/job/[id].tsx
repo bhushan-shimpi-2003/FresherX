@@ -49,11 +49,15 @@ export default function JobDetailScreen() {
       const onSuccess = async () => {
         try {
           await applyJob(job.id);
-          Alert.alert('Success', 'Application submitted successfully! This job is now in your Applied tab.');
+          Alert.alert('Success', 'Application recorded! You will now be redirected to the application page.', [
+            { text: 'OK', onPress: () => Linking.openURL(job.applyLink!) }
+          ]);
         } catch (err) {
           console.warn('Failed to apply', err);
+          Alert.alert('Redirecting', 'Proceeding to application page...', [
+            { text: 'OK', onPress: () => Linking.openURL(job.applyLink!) }
+          ]);
         }
-        Linking.openURL(job.applyLink!);
       };
 
       const onSkipped = () => {
