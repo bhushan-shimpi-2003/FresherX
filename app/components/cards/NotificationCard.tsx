@@ -29,14 +29,10 @@ const colorMap = {
   system: '#4DAFFF',
 };
 
-export function NotificationCard({ notification, onPress, index = 0 }: NotificationCardProps) {
+export function NotificationCard({ notification, onPress, onDelete, index = 0 }: NotificationCardProps) {
   const theme = useTheme();
   const Icon = iconMap[notification.type] ?? Bell;
   const iconColor = colorMap[notification.type] ?? theme.colors.primary;
-
-  function onDelete(event: GestureResponderEvent): void {
-    throw new Error('Function not implemented.');
-  }
 
   return (
     <Animated.View entering={FadeInRight.delay(index * 50).springify()}>

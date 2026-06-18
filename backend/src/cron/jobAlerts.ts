@@ -64,6 +64,61 @@ export const runJobAlerts = async () => {
         
       console.log(`Expiration alert sent for job ${job.id}`);
     }
+
+    // ---------------------------------------------------------
+    // NEW: Find jobs posted >= 4 hours ago for reminder
+    // ---------------------------------------------------------
+    const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+    const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+
+    const { data: reminderJobs, error: reminderError } = await supabaseAdmin
+      .from('jobs')
+      .select('id, title, company_name, skills')
+      .eq('status', 'published')
+      .eq('four_hour_alert_sent', false)
+      .lte('created_at', fourHoursAgo.toISOString())
+      .gte('created_at', fiveHoursAgo.toISOString());
+
+    if (reminderError) {
+      console.error('Error fetching 4-hour reminder jobs:', reminderError);
+    } else if (reminderJobs && reminderJobs.length > 0) {
+      for (const job of reminderJobs) {
+        if (job.skills && job.skills.length > 0) {
+          const { data: matchingStudents } = await supabaseAdmin
+            .from('student_profiles')
+            .select('user_id')
+            .overlaps('skills', job.skills);
+
+          if (matchingStudents && matchingStudents.length > 0) {
+            const notifications = matchingStudents.map(student => ({
+              user_id: student.user_id,
+              title: 'New Job Matching Your Skills!',
+              body: `${job.title} at ${job.company_name || 'a company'} was just posted. Apply now before it's gone!`,
+              type: 'job_alert',
+              data: { job_id: job.id }
+            }));
+            
+            await supabaseAdmin.from('notifications').insert(notifications);
+
+            await NotificationService.sendToUsers(
+              matchingStudents.map(student => student.user_id),
+              {
+                title: 'New Job Matching Your Skills!',
+                body: `${job.title} at ${job.company_name || 'a company'} was just posted. Apply now before it's gone!`,
+                data: { job_id: job.id }
+              }
+            );
+          }
+        }
+        
+        await supabaseAdmin
+          .from('jobs')
+          .update({ four_hour_alert_sent: true })
+          .eq('id', job.id);
+          
+        console.log(`4-hour reminder alert sent for job ${job.id}`);
+      }
+    }
   } catch (err) {
     console.error('Cron Job Error:', err);
     throw err;

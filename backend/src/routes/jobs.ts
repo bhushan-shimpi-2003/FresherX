@@ -135,7 +135,7 @@ router.post('/:id/views', requireAuth, async (req, res) => {
   try {
     if (!req.user) throw new Error('Unauthorized');
     const { id } = req.params;
-    
+
     const { error } = await supabaseAdmin.from('job_views').insert({
       job_id: id,
       user_id: req.user.id
@@ -146,13 +146,20 @@ router.post('/:id/views', requireAuth, async (req, res) => {
       if (error.code === '23505') {
         return res.status(409).json({ success: true, message: 'Already viewed' });
       }
+      // Log the error but don't crash if there's a constraint issue, though we will fix it in the DB
+      console.warn('Warning: job_views insert error:', error);
       throw error;
     }
 
-    // Increment the views column in jobs table
-    const { data: jobData } = await supabaseAdmin.from('jobs').select('views').eq('id', id).single();
+    // We simply increment the views column in jobs table
+    // Fetch current views
+    const { data: jobData, error: fetchError } = await supabaseAdmin.from('jobs').select('views').eq('id', id).single();
+    
+    if (fetchError) throw fetchError;
+
     if (jobData) {
-      await supabaseAdmin.from('jobs').update({ views: (jobData.views || 0) + 1 }).eq('id', id);
+      const { error: updateError } = await supabaseAdmin.from('jobs').update({ views: (jobData.views || 0) + 1 }).eq('id', id);
+      if (updateError) throw updateError;
     }
     
     res.json({ success: true });

@@ -78,6 +78,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 import { startJobAlertsCron } from './cron/jobAlerts';
+import { startCleanupCron } from './cron/cleanup';
 
 // Start server if not in production (Vercel uses the exported app)
 if (process.env.NODE_ENV !== 'production') {
@@ -86,6 +87,7 @@ if (process.env.NODE_ENV !== 'production') {
     
     // Start background jobs (local only)
     startJobAlertsCron();
+    startCleanupCron();
   });
 }
 
