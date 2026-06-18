@@ -4,7 +4,10 @@ import mobileAds, { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from
 // Initialize the Google Mobile Ads SDK
 mobileAds().initialize().catch(console.warn);
 
-const adUnitId = __DEV__ ? TestIds.REWARDED : 'ca-app-pub-2920036380008137/1229515288';
+// Since the app is not published to the Play Store yet, real AdMob IDs will fail to load.
+// We force TestIds.REWARDED here so that ads will always show for testing purposes.
+// Remember to change this back to your real ID ('ca-app-pub-2920036380008137/1229515288') once published!
+const adUnitId = TestIds.REWARDED;
 
 export function useApplyAd() {
   const [adLoaded, setAdLoaded] = useState(false);
