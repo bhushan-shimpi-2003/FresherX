@@ -34,15 +34,22 @@ export function NotificationCard({ notification, onPress, onDelete, index = 0 }:
   const Icon = iconMap[notification.type] ?? Bell;
   const iconColor = colorMap[notification.type] ?? theme.colors.primary;
 
-  // For job notifications, format body as "Role: message in Location"
-  const formattedBody = React.useMemo(() => {
+  const formattedTitle = React.useMemo(() => {
     if ((notification.type === 'new_job' || notification.type === 'saved_job') && notification.data) {
       const role = notification.data.job_title || notification.data.role;
-      const location = notification.data.location;
-      if (role && location) {
-        return `${role}: new opportunities in ${location}.`;
+      const company = notification.data.company;
+      if (role && company) {
+        return `💼 ${role} at ${company}`;
+      } else if (role) {
+        return `💼 ${role}`;
       }
-      if (role) return `${role}: ${notification.body}`;
+    }
+    return notification.title;
+  }, [notification]);
+
+  const formattedBody = React.useMemo(() => {
+    if (notification.type === 'new_job' || notification.type === 'saved_job') {
+      return 'Matches your skills. Be one of the first to apply!';
     }
     return notification.body;
   }, [notification]);
@@ -76,7 +83,7 @@ export function NotificationCard({ notification, onPress, onDelete, index = 0 }:
             ]}
             numberOfLines={1}
           >
-            {notification.title}
+            {formattedTitle}
           </Text>
           <Text
             style={[styles.body, { color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily.regular }]}
