@@ -17,7 +17,7 @@ router.get('/', requireAuth, async (req, res) => {
       .from('jobs')
       .select(`
         *,
-        recruiter:profiles(id, full_name, poster_type)
+        recruiter:profiles!jobs_recruiter_id_fkey(id, full_name, poster_type)
       `)
       .eq('status', 'published');
 
@@ -119,7 +119,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, recruiter:profiles(id, full_name, poster_type)`)
+      .select(`*, recruiter:profiles!jobs_recruiter_id_fkey(id, full_name, poster_type)`)
       .eq('id', id)
       .single();
 
@@ -246,7 +246,7 @@ router.get('/me/applied', requireAuth, async (req, res) => {
 
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, recruiter:profiles(id, full_name, poster_type)`)
+      .select(`*, recruiter:profiles!jobs_recruiter_id_fkey(id, full_name, poster_type)`)
       .in('id', jobIds)
       .order('created_at', { ascending: false })
       .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);

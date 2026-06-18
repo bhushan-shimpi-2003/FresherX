@@ -193,7 +193,7 @@ router.get('/jobs', async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('jobs')
-      .select(`*, recruiter:profiles(full_name, email)`)
+      .select(`*, recruiter:profiles!jobs_recruiter_id_fkey(full_name, email)`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
