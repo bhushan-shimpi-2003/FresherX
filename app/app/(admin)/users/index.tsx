@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   backBtn: { padding: 8, marginLeft: -8 },
   title: { fontSize: 20, letterSpacing: -0.5 },
   searchSection: { paddingHorizontal: 16, marginBottom: 12 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 16, borderWidth: 1 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
   searchInput: { flex: 1, fontSize: 14 },
   filterContainer: { marginBottom: 12 },
   filterList: { paddingHorizontal: 16, gap: 8 },

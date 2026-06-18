@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
   headerTitle: { fontSize: 20 },
   content: { flex: 1, paddingHorizontal: 20 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, height: 50, borderRadius: 12, borderWidth: 1, marginBottom: 20, gap: 10 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, height: 44, borderRadius: 12, borderWidth: 1, marginBottom: 20, gap: 10 },
   searchInput: { flex: 1, fontSize: 16 },
   salaryCard: { padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 12 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },

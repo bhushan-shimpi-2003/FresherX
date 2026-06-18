@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import mobileAds, { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 
-// Initialize the Google Mobile Ads SDK
-mobileAds().initialize().catch(console.warn);
+let isInitialized = false;
+let initPromise: Promise<any> | null = null;
+
+const initializeAds = () => {
+  if (isInitialized) return Promise.resolve();
+  if (!initPromise) {
+    initPromise = mobileAds().initialize().then(() => {
+      isInitialized = true;
+    }).catch(e => {
+      console.warn('AdMob init failed', e);
+    });
+  }
+  return initPromise;
+};
 
 // Since the app is not published to the Play Store yet, real AdMob IDs will fail to load.
-// We force TestIds.REWARDED here so that ads will always show for testing purposes.
-// Remember to change this back to your real ID ('ca-app-pub-2920036380008137/1229515288') once published!
 const adUnitId = TestIds.REWARDED;
 
 export function useApplyAd() {
@@ -20,7 +30,9 @@ export function useApplyAd() {
     unsubscribeRefs.current = [];
   };
 
-  const loadNewAd = useCallback(() => {
+  const loadNewAd = useCallback(async () => {
+    await initializeAds();
+    
     // Cleanup any existing listeners before creating a new instance
     cleanupListeners();
     setAdLoaded(false);
@@ -105,6 +117,7 @@ export function useApplyAd() {
     } else {
       console.log('Ad not loaded yet or failed, falling back to success');
       // If ad isn't ready or failed to load entirely, we don't block the user
+      // But we can notify the developer in dev mode, or just silently succeed
       onSuccess();
       // Try to load one for next time
       loadNewAd();

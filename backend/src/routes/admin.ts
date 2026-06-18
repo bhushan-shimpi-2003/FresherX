@@ -35,7 +35,7 @@ router.get('/stats', async (req, res) => {
     ] = await Promise.all([
       supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
       supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'recruiter'),
-      supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).neq('status', 'deleted'),
       supabaseAdmin.from('recruiter_profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabaseAdmin.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'open'),
@@ -194,6 +194,7 @@ router.get('/jobs', async (req, res) => {
     const { data, error } = await supabaseAdmin
       .from('jobs')
       .select(`*, recruiter:profiles!jobs_recruiter_id_fkey(full_name, email)`)
+      .neq('status', 'deleted')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -355,13 +356,9 @@ router.delete('/jobs/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Also delete associated applications and saved jobs
-    await supabaseAdmin.from('applied_jobs').delete().eq('job_id', id);
-    await supabaseAdmin.from('saved_jobs').delete().eq('job_id', id);
-    
     const { error } = await supabaseAdmin
       .from('jobs')
-      .delete()
+      .update({ status: 'deleted', updated_at: new Date().toISOString() })
       .eq('id', id);
 
     if (error) throw error;

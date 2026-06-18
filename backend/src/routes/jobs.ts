@@ -173,9 +173,14 @@ router.post('/:id/apply', requireAuth, sensitiveRouteLimiter, async (req, res) =
   try {
     const { id } = req.params;
     
-    // 1. Atomically increment the application count using our custom RPC
-    const { error: incrementError } = await supabaseAdmin.rpc('increment_job_applications', { p_job_id: id });
-    if (incrementError) throw incrementError;
+    // 1. Increment the application count
+    const { data: currentJob, error: fetchCurrentError } = await supabaseAdmin.from('jobs').select('applications').eq('id', id).single();
+    if (fetchCurrentError) throw fetchCurrentError;
+    
+    if (currentJob) {
+      const { error: incrementError } = await supabaseAdmin.from('jobs').update({ applications: (currentJob.applications || 0) + 1 }).eq('id', id);
+      if (incrementError) throw incrementError;
+    }
 
     // 2. Fetch the updated job data for notification context
     const { data: job, error: fetchError } = await supabaseAdmin.from('jobs').select('title, applications, recruiter_id').eq('id', id).single();

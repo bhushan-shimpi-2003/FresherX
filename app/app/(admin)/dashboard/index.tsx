@@ -105,7 +105,7 @@ export default function AdminDashboardScreen() {
               Action Required
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
             {quickActions.map(({ label, value, route, Icon, color, urgent }) => (
               <TouchableOpacity
                 key={label}
@@ -114,6 +114,7 @@ export default function AdminDashboardScreen() {
                   styles.actionCard,
                   {
                     flex: 1,
+                    minWidth: '45%',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',

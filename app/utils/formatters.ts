@@ -23,8 +23,7 @@ export function formatDeadline(deadline: string | null): string {
   const dateObj = new Date(deadline);
   
   const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const exactString = `(Expires: ${formattedDate} at ${formattedTime})`;
+  const exactString = `(Expires: ${formattedDate})`;
 
   const diff = dateObj.getTime() - Date.now();
   if (diff < 0) return `Expired on ${formattedDate}`;

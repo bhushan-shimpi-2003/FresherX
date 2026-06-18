@@ -30,6 +30,7 @@ router.get('/jobs', async (req, res) => {
       .from('jobs')
       .select(`*`)
       .eq('recruiter_id', userId)
+      .neq('status', 'deleted')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -148,22 +149,7 @@ router.post('/jobs', async (req, res) => {
   }
 });
 
-router.delete('/jobs/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    // ensure job belongs to user
-    const { error } = await supabaseAdmin
-      .from('jobs')
-      .delete()
-      .eq('id', id)
-      .eq('recruiter_id', req.user.id);
 
-    if (error) throw error;
-    res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 router.put('/jobs/:id', async (req, res) => {
   try {
@@ -208,15 +194,10 @@ router.put('/jobs/:id', async (req, res) => {
 router.delete('/jobs/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Cleanup related records first to avoid foreign key constraints
-    await supabaseAdmin.from('job_matches').delete().eq('job_id', id);
-    await supabaseAdmin.from('saved_jobs').delete().eq('job_id', id);
-    await supabaseAdmin.from('applications').delete().eq('job_id', id);
 
     const { error } = await supabaseAdmin
       .from('jobs')
-      .delete()
+      .update({ status: 'deleted', updated_at: new Date().toISOString() })
       .eq('id', id)
       .eq('recruiter_id', req.user.id);
 
@@ -267,13 +248,13 @@ router.get('/stats', async (req, res) => {
       { data: jobsData },
       { count: thisWeekJobs },
     ] = await Promise.all([
-      supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId),
+      supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).neq('status', 'deleted'),
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).eq('status', 'published'),
       supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).eq('status', 'pending'),
-      supabaseAdmin.from('jobs').select('views').eq('recruiter_id', userId),
-      supabaseAdmin.from('jobs').select('applications').eq('recruiter_id', userId),
-      supabaseAdmin.from('jobs').select('id').eq('recruiter_id', userId),
-      supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+      supabaseAdmin.from('jobs').select('views').eq('recruiter_id', userId).neq('status', 'deleted'),
+      supabaseAdmin.from('jobs').select('applications').eq('recruiter_id', userId).neq('status', 'deleted'),
+      supabaseAdmin.from('jobs').select('id').eq('recruiter_id', userId).neq('status', 'deleted'),
+      supabaseAdmin.from('jobs').select('*', { count: 'exact', head: true }).eq('recruiter_id', userId).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()).neq('status', 'deleted'),
     ]);
 
     const totalViews = (viewData ?? []).reduce((sum: number, j: any) => sum + (j.views ?? 0), 0);

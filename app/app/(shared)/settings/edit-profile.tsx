@@ -9,6 +9,8 @@ import { Button } from '../../../components/ui/Button';
 import { useAuthStore } from '../../../store/auth.store';
 import { adminApi } from '../../../services/api/admin.api';
 import api from '../../../services/axios';
+import { Avatar } from '../../../components/ui/Avatar';
+import { Shield } from 'lucide-react-native';
 
 export default function EditProfileScreen() {
   const theme = useTheme();
@@ -51,10 +53,26 @@ export default function EditProfileScreen() {
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.background },
     content: { padding: 20 },
-    title: { fontSize: 24, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.text, marginBottom: 8 },
-    subtitle: { fontSize: 16, fontFamily: theme.typography.fontFamily.regular, color: theme.colors.textMuted, marginBottom: 24 },
+    title: { fontSize: 28, fontFamily: theme.typography.fontFamily.bold, color: theme.colors.text, marginBottom: 8, letterSpacing: -0.5 },
+    subtitle: { fontSize: 16, fontFamily: theme.typography.fontFamily.regular, color: theme.colors.textMuted, marginBottom: 32 },
     error: { color: theme.colors.error, marginBottom: 16, fontFamily: theme.typography.fontFamily.medium },
-    submitButton: { marginTop: 16 },
+    formCard: {
+      backgroundColor: theme.colors.card,
+      borderRadius: 24,
+      padding: 24,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 12,
+      elevation: 2,
+    },
+    avatarContainer: {
+      alignItems: 'center',
+      marginBottom: 32,
+    },
+    submitButton: { marginTop: 24 },
   });
 
   return (
@@ -64,29 +82,37 @@ export default function EditProfileScreen() {
         <Text style={styles.title}>Basic Information</Text>
         <Text style={styles.subtitle}>Update your core account details here.</Text>
         
-        {!!errorText && <Text style={styles.error}>{errorText}</Text>}
+        <View style={styles.formCard}>
+          <View style={styles.avatarContainer}>
+            <Avatar name={fullName || user?.email || 'User'} size={80} />
+          </View>
 
-        <Input
-          label="Full Name"
-          value={fullName}
-          onChangeText={setFullName}
-          placeholder="Enter your full name"
-        />
-        
-        <Input
-          label="Email Address"
-          value={user?.email || ''}
-          onChangeText={() => {}}
-          placeholder="Email"
-          editable={false} // Emails usually require special change flows
-        />
+          {!!errorText && <Text style={styles.error}>{errorText}</Text>}
 
-        <Button 
-          label="Save Changes"
-          onPress={handleSave}
-          loading={isSaving}
-          style={styles.submitButton}
-        />
+          <Input
+            label="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="Enter your full name"
+          />
+          
+          <Input
+            label="Email Address"
+            value={user?.email || ''}
+            onChangeText={() => {}}
+            placeholder="Email"
+            editable={false} // Emails usually require special change flows
+            leftIcon={<Shield size={18} color={theme.colors.textMuted} />}
+          />
+
+          <Button 
+            label="Save Changes"
+            onPress={handleSave}
+            loading={isSaving}
+            style={styles.submitButton}
+            size="lg"
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

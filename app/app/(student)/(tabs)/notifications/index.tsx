@@ -2,6 +2,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../../../../theme';
 import { useAuthStore } from '../../../../store/auth.store';
 import { useNotificationsStore } from '../../../../store/notifications.store';
@@ -13,6 +14,7 @@ import { Bell, CheckCheck } from 'lucide-react-native';
 
 export default function NotificationsScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { user } = useAuthStore();
   const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead, deleteNotification, error } = useNotificationsStore();
   const [filter, setFilter] = React.useState<string>('all');
@@ -88,7 +90,12 @@ export default function NotificationsScreen() {
               <NotificationCard
                 notification={item}
                 index={index}
-                onPress={() => !item.isRead && markAsRead(item.id)}
+                onPress={() => {
+                  if (!item.isRead) markAsRead(item.id);
+                  if (item.data?.job_id) {
+                    router.push(`/(student)/job/${item.data.job_id}` as any);
+                  }
+                }}
                 onDelete={() => deleteNotification(item.id)}
               />
             )}

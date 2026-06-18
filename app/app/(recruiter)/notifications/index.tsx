@@ -2,6 +2,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../../../theme';
 import { useAuthStore } from '../../../store/auth.store';
 import { useNotificationsStore } from '../../../store/notifications.store';
@@ -13,6 +14,7 @@ import { Bell, CheckCheck } from 'lucide-react-native';
 
 export default function RecruiterNotificationsScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { user } = useAuthStore();
   const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead } = useNotificationsStore();
   const [filter, setFilter] = React.useState<string>('all');
@@ -81,11 +83,16 @@ export default function RecruiterNotificationsScreen() {
           data={filteredNotifications}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => (
-            <NotificationCard
-              notification={item}
-              index={index}
-              onPress={() => !item.isRead && markAsRead(item.id)}
-            />
+              <NotificationCard
+                notification={item}
+                index={index}
+                onPress={() => {
+                  if (!item.isRead) markAsRead(item.id);
+                  if (item.data?.job_id) {
+                    router.push(`/(recruiter)/post/${item.data.job_id}` as any);
+                  }
+                }}
+              />
           )}
           ListEmptyComponent={
             <EmptyState

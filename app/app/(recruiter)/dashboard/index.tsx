@@ -53,7 +53,8 @@ export default function RecruiterDashboardScreen() {
           { event: '*', schema: 'public', table: 'jobs', filter: `recruiter_id=eq.${user.id}` },
           (payload) => {
             // Optimistic Cache Mutation for Jobs
-            if (payload.new && payload.new.id) {
+            const newRecord = payload.new as any;
+            if (newRecord && newRecord.id) {
                queryClient.setQueryData(['recruiterJobs', user.id], (oldData) => {
                  if (!oldData) return oldData;
                  // Safely trigger a background refetch instead of complex manual mapping
@@ -97,6 +98,8 @@ export default function RecruiterDashboardScreen() {
     draft: { label: 'Draft', variant: 'default' },
   };
 
+  const FlashListAny = FlashList as any;
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
       {/* Dynamic Ambient Glow */}
@@ -109,10 +112,11 @@ export default function RecruiterDashboardScreen() {
         />
       </View>
 
-      <FlashList
+      <FlashListAny
         data={analytics || []}
         estimatedItemSize={120}
-        keyExtractor={(item) => item.jobId}
+        numColumns={2}
+        keyExtractor={(item: any) => item.jobId}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
         ListHeaderComponent={
@@ -281,9 +285,9 @@ export default function RecruiterDashboardScreen() {
         )}
           </>
         }
-        renderItem={({ item }) => (
-          <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
-                <View key={item.jobId} style={[styles.jobRow, { backgroundColor: theme.colors.card + '90', borderColor: theme.colors.border, flexDirection: 'column', alignItems: 'stretch' }]}>
+        renderItem={({ item }: { item: any }) => (
+          <View style={{ flex: 1, padding: 8 }}>
+                <View key={item.jobId} style={[styles.jobRow, { backgroundColor: theme.colors.card + '90', borderColor: theme.colors.border, flexDirection: 'column', alignItems: 'stretch', marginHorizontal: 0, marginBottom: 0 }]}>
                   <Text style={[styles.jobTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.semiBold }]} numberOfLines={1}>
                     {item.title}
                   </Text>
@@ -299,18 +303,18 @@ export default function RecruiterDashboardScreen() {
                     <View style={{ height: '100%', width: `${Math.min(item.conversionRate ?? 0, 100)}%`, backgroundColor: theme.colors.primary, borderRadius: 3 }} />
                   </View>
 
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 }}>
                     <View style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.views ?? 0}</Text>
-                      <Text style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Views</Text>
+                      <Text style={{ fontSize: 16, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.views ?? 0}</Text>
+                      <Text style={{ fontSize: 10, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Views</Text>
                     </View>
                     <View style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.applications ?? 0}</Text>
-                      <Text style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Applicants</Text>
+                      <Text style={{ fontSize: 16, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.applications ?? 0}</Text>
+                      <Text style={{ fontSize: 10, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Applicants</Text>
                     </View>
                     <View style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 18, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.saves ?? 0}</Text>
-                      <Text style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Saves</Text>
+                      <Text style={{ fontSize: 16, color: theme.colors.text, fontFamily: theme.typography.fontFamily.bold }}>{item.saves ?? 0}</Text>
+                      <Text style={{ fontSize: 10, color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily.medium }}>Saves</Text>
                     </View>
                   </View>
                 </View>
