@@ -347,10 +347,10 @@ const styles = StyleSheet.create({
     padding: 12, borderRadius: 12, borderWidth: 1,
   },
   verificationText: { fontSize: 13, flex: 1, lineHeight: 18 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, paddingBottom: 24 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 24 },
   statCard: {
-    flex: 1, minWidth: '45%', padding: 18, borderRadius: 20,
-    borderWidth: 1, gap: 12,
+    width: '48%', padding: 18, borderRadius: 20,
+    borderWidth: 1, gap: 12, marginBottom: 16
   },
   statIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: 26, letterSpacing: -0.5 },

@@ -62,9 +62,11 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
 
     try {
       const { jobs, hasMore } = await jobsApi.fetchJobs(currentFilters, 0);
+      const appliedIds = new Set(get().appliedJobs.map(j => j.id));
+      const filteredJobs = jobs.filter(j => !appliedIds.has(j.id));
 
       set({
-        jobs,
+        jobs: filteredJobs,
         page: 2,
         hasMore,
         isLoading: false,
@@ -78,22 +80,26 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
     set({ isRecommendedLoading: true, error: null });
     try {
       const { jobs } = await jobsApi.fetchJobs({ matchUserSkills: true }, 0);
-      set({ recommendedJobs: jobs, isRecommendedLoading: false });
+      const appliedIds = new Set(get().appliedJobs.map(j => j.id));
+      const filteredJobs = jobs.filter(j => !appliedIds.has(j.id));
+      set({ recommendedJobs: filteredJobs, isRecommendedLoading: false });
     } catch (err: any) {
       set({ error: err?.message, isRecommendedLoading: false });
     }
   },
 
   fetchMoreJobs: async () => {
-    const { page, hasMore, isLoadingMore, filters, jobs } = get();
+    const { page, hasMore, isLoadingMore, filters, jobs, appliedJobs } = get();
     if (!hasMore || isLoadingMore) return;
 
     set({ isLoadingMore: true });
     try {
       const result = await jobsApi.fetchJobs(filters, page - 1);
+      const appliedIds = new Set(appliedJobs.map(j => j.id));
+      const filteredNewJobs = result.jobs.filter(j => !appliedIds.has(j.id));
 
       set({
-        jobs: [...jobs, ...result.jobs],
+        jobs: [...jobs, ...filteredNewJobs],
         page: page + 1,
         hasMore: result.hasMore,
         isLoadingMore: false,
@@ -153,6 +159,13 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
     try {
       const jobs = await jobsApi.fetchAppliedJobs();
       set({ appliedJobs: jobs });
+
+      // Also clean up main lists if they were already fetched
+      const appliedIds = new Set(jobs.map((j: Job) => j.id));
+      set((state) => ({
+        jobs: state.jobs.filter((j: Job) => !appliedIds.has(j.id)),
+        recommendedJobs: state.recommendedJobs.filter((j: Job) => !appliedIds.has(j.id))
+      }));
     } catch (err) {
       console.error(err);
     }
